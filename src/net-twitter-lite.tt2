@@ -1,0 +1,494 @@
+package Net::Twitter::Lite;
+use 5.005;
+use warnings;
+use strict;
+
+our $VERSION = '[% VERSION %]';
+$VERSION = eval { $VERSION };
+
+use Carp;
+use URI::Escape;
+use JSON::Any qw/XS DWIW JSON/;
+use Net::Twitter::Lite::Error;
+
+sub new {
+    my ($class, %args) = @_;
+
+    my $new = bless {
+        apiurl     => '[% get_base_url_for('REST')   %]',
+        searchurl  => '[% get_base_url_for('Search') %]',
+        useragent  => __PACKAGE__ . "/$VERSION (Perl)",
+        clientname => __PACKAGE__,
+        clientver  => $VERSION,
+        clienturl  => 'http://search.cpan.org/dist/Net-Twitter-Lite/',
+        source     => 'twitterpm',
+        useragent_class => 'LWP::UserAgent',
+        useragent_args  => {},
+        %args
+    }, $class;
+
+    $new->{ua} ||= do {
+        eval "use $new->{useragent_class}";
+        croak $@ if $@;
+
+        $new->{useragent_class}->new(%{$new->{useragent_args}});
+    };
+
+    $new->{ua}->agent($new->{useragent});
+    $new->{ua}->default_header('X-Twitter-Client'         => $new->{clientname});
+    $new->{ua}->default_header('X-Twitter-Client-Version' => $new->{clientver});
+    $new->{ua}->default_header('X-Twitter-Client-URL'     => $new->{clienturl});
+    $new->{ua}->env_proxy;
+
+    $new->{ua}->add_handler(request_prepare => sub {
+        if ( exists $new->{username} && exists $new->{password} ) {
+            shift->authorization_basic($new->{username}, $new->{password});
+        }
+    });
+
+    return $new;
+}
+
+sub credentials {
+    my $self = shift;
+
+    croak "exected a username and password" unless @_ == 2;
+
+    $self->{username} = shift;
+    $self->{password} = shift;
+}
+
+my $api_def = [
+[% FOREACH api IN [ 'REST', 'Search' ] -%]
+    [ [% api %] => [
+[% FOREACH method IN get_methods_for(api) -%]
+        [ '[% method.name %]', {
+            aliases     => [ qw/[% method.aliases.join(' ') %]/ ],
+            path        => '[% method.path %]',
+            method      => '[% method.method %]',
+            params      => [ qw/[% method.params.join(' ')  %]/ ],
+            required    => [ qw/[% method.required.join(' ') %]/ ],
+            add_source  => [% method.add_source %],
+            deprecated  => [% method.deprecated %],
+        } ],
+[% END -%]
+    ] ],
+[% END -%]
+];
+
+my $post_request = sub {
+    my ($ua, $uri, $args) = @_;
+    return $ua->post($uri, $args);
+};
+
+my $get_request = sub {
+    my ($ua, $uri, $args) = @_;
+    $uri->query_form($args);
+    return $ua->get($uri);
+};
+
+my $with_url_arg = sub {
+    my ($path, $args) = @_;
+
+    if ( defined(my $id = delete $args->{id}) ) {
+        $path .= uri_escape($id);
+    }
+    else {
+        chop($path);
+    }
+    return $path;
+};
+
+while ( @$api_def ) {
+    my $api = shift @$api_def;
+    my $api_name = shift @$api;
+    my $methods = shift @$api;
+
+    my $url_attr = $api_name eq 'REST' ? 'apiurl' : 'searchurl';
+
+    my $base_url = sub { shift->{$url_attr} };
+
+    for my $method ( @$methods ) {
+        my $name    = shift @$method;
+        my %options = %{ shift @$method };
+
+        my ($arg_names, $path) = @options{qw/required path/};
+        $arg_names = $options{params} if @$arg_names == 0 && @{$options{params}} == 1;
+        my $request = $options{method} eq 'POST' ? $post_request : $get_request;
+
+        my $modify_path = $path =~ s,/id$,/, ? $with_url_arg : sub { $_[0] };
+
+        my $code = sub {
+            my $self = shift;
+
+            my $args = {};
+            if ( ref $_[0] ) {
+                ref $_[0] eq 'HASH' && @_ == 1 || croak "$name expected a single HASH ref argument";
+                $args = { %{shift()} }; # copy callers args since we may add ->{source}
+            }
+            elsif ( @_ ) {
+                @_ == @$arg_names || croak "$name expected @{[ scalar @$arg_names ]} args";
+                @{$args}{@$arg_names} = @_;
+            }
+            $args->{source} ||= $self->{source} if $options{add_source};
+
+            my $local_path = $modify_path->($path, $args);
+            
+            my $uri = URI->new($base_url->($self) . "/$local_path.json");
+
+            # upgrade params to UTF-8 so latin-1 literals can be handled as UTF-8 too
+            utf8::upgrade $_ for values %$args;
+
+            return $self->_parse_result($request->($self->{ua}, $uri, $args));
+        };
+
+        no strict 'refs';
+        *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
+    }
+}
+
+sub _from_json {
+    my ($self, $json) = @_;
+
+    return eval { JSON::Any->from_json($json) };
+}
+
+sub _parse_result {
+    my ($self, $res) = @_;
+
+    # workaround for Laconica API returning bools as strings
+    # (Fixed in Laconi.ca 0.7.4)
+    my $content = $res->content;
+    $content =~ s/^"(true|false)"$/$1/;
+
+    my $obj = $self->_from_json($content);
+
+    # Twitter sometimes returns an error with status code 200
+    if ( $obj && ref $obj eq 'HASH' && exists $obj->{error} ) {
+        die Net::Twitter::Lite::Error->new(twitter_error => $obj, http_response => $res);
+    }
+
+    return $obj if $res->is_success && $obj;
+
+    my $error = Net::Twitter::Lite::Error->new(http_response => $res);
+    $error->twitter_error($obj) if $obj;
+
+    die $error;
+}
+
+1;
+
+=head1 NAME
+
+Net::Twitter::Lite - A perl interface to the Twitter API
+
+=head1 VERSION
+
+This document describes Net::Twitter::Lite version [% VERSION %]
+
+=head1 SYNOPSIS
+
+  use Net::Twitter::Lite;
+
+  my $nt = Net::Twitter::Lite->new(
+      username => $user,
+      password => $password
+  );
+
+  my $result = eval { $nt->update('Hello, world!') };
+
+  eval {
+      my $statuses = $nt->friends_timeline({ since_id => $high_water, count => 100 });
+      for my $status ( @$statuses ) {
+          print "$status->{time} <$status->{user}{screen_name}> $status->{text}\n";
+      }
+  };
+  warn "$@\n" if $@;
+
+
+=head1 DESCRIPTION
+
+This module provides a perl interface to the Twitter APIs, It uses the same API definitions
+as L<Net::Twitter>, but without the extra bells and whistles and without the additional dependencies.
+Same great taste, less filling.
+
+
+This module is a companion to, but not part of the distribution of
+C<Net::Twitter>.  It's API methods and API method documentation are generated
+from C<Net::Twitter> internals.  It exists for those who can not, or prefer not
+to install L<Moose> and its dependencies.
+
+You should consider upgrading to C<Net::Twitter> for additional functionality,
+finer grained control over features, full backwards compatibility with older
+versions of C<Net::Twitter>, and additional error handling options.
+
+=head1 METHODS AND ARGUMENTS
+
+=over 4
+
+=item new
+
+This constructs a C<Net::Twitter::Lite> object.  It takes several named parameters,
+all of them optional:
+
+=over 4
+
+=item username
+
+This is the screen name or email used to authenticate with Twitter.
+
+=item password
+
+This is the password used to authenticate with Twitter.
+
+=item clientname
+
+The value for the C<X-Twitter-Client-Name> HTTP header. It defaults to "Perl
+Net::Twitter::Lite".
+
+=item clientver
+
+The value for the C<X-Twitter-Client-Version> HTTP header. It defaults to
+current version of the C<Net::Twitter::Lite> module.
+
+=item clienturl
+
+The value for the C<X-Twitter-Client-URL> HTTP header. It defaults to the
+search.cpan.org page for the C<Net::Twitter::Lite> distribution.
+
+=item useragent_class
+
+The C<LWP::UserAgent> compatible class used internally by C<Net::Twitter::Lite>.  It
+defaults to "LWP::UserAgent".  For L<POE> based applications, consider using
+"LWP::UserAgent::POE".
+
+=item useragent_args
+
+An HASH ref of arguments to pass to constructor of the class specified with
+C<useragent_class>, above.  It defaults to {} (an empty HASH ref).
+
+=item useragent
+
+The value for C<User-Agent> HTTP header.  It defaults to
+"Net::Twitter::Lite/[% VERSION %] (Perl)".
+
+=item source
+
+The value used in the C<source> parameter of API method calls. It is currently
+only used in the C<update> method in the REST API.  It defaults to
+"twitterpm".  This results in the text "from Net::Twitter" rather than "from
+web" for status messages posted from C<Net::Twitter::Lite> when displayed via the
+Twitter web interface.  The value for this parameter is provided by Twitter
+when a Twitter application is registered.  See
+L<http://apiwiki.twitter.com/FAQ#HowdoIget%E2%80%9CfromMyApp%E2%80%9DappendedtoupdatessentfrommyAPIapplication>.
+
+=item apiurl
+
+The URL for the Twitter API. This defaults to "http://twitter.com".
+
+=back
+
+=item credentials($username, $password)
+
+Set the credentials for Basic Authentication.  This is helpful for managing
+multiple accounts.
+
+=back
+
+=head1 API METHODS AND ARGUMENTS
+
+Most Twitter API methods take parameters.  All Net::Twitter::Lite API
+methods will accept a HASH ref of named parameters as specified in the Twitter
+API documentation.  For convenience, many Net::Twitter::Lite methods accept
+simple positional arguments as documented, below.  The positional parameter
+passing style is optional; you can always use the named parameters in a hash
+ref if you prefer.
+
+For example, the REST API method C<update> has one required parameter,
+C<status>.  You can call C<update> with a HASH ref argument:
+
+    $nt->update({ status => 'Hello world!' });
+
+Or, you can use the convenient form:
+
+    $nt->update('Hello world!');
+
+The C<update> method also has an optional parameter, C<in_reply_to_status_id>.
+To use it, you B<must> use the HASH ref form:
+
+    $nt->update({ status => 'Hello world!', in_reply_to_status_id => $reply_to });
+
+Convenience form is provided for the required parameters of all API methods.
+So, these two calls are equivalent:
+
+    $nt->friendship_exists({ user_a => $fred, user_b => $barney });
+    $nt->friendship_exists($fred, $barney);
+
+Many API methods have aliases.  You can use the API method name, or any of its
+aliases, as you prefer.  For example, these calls are all equivalent:
+
+    $nt->friendship_exists($fred, $barney);
+    $nt->relationship_exists($fred, $barney);
+    $nt->follows($fred, $barney);
+
+Aliases support both the HASH ref and convenient forms:
+
+    $nt->follows({ user_a => $fred, user_b => $barney });
+
+Methods that support the C<page> parameter expect page numbers E<gt> 0.  Twitter silently
+ignores invalid C<page> values.  So C<< { page => 0 } >> produces the same result
+as C<< { page => 1 } >>.
+
+=head1 REST API Methods
+
+Several of these methods accept a user ID as the C<id> parameter.  The user ID
+can be either a screen name, or the users numeric ID.  To disambiguate, use
+the C<screen_name> or C<user_id> parameters, instead.
+
+For example, These calls are equivalent:
+
+    $nt->create_friend('net_twitter'); # screen name
+    $nt->create_friend(1564061);       # numeric ID
+    $nt->create_friend({ id => 'net_twitter' });
+    $nt->create_friend({ screen_name => 'net_twitter' });
+    $nt->create_friend({ user_id     => 1564061 });
+
+However user_id 911 and screen_name 911 are separate Twitter accounts.  These
+calls are NOT equivalent:
+
+    $nt->create_friend(911); # interpreted as screen name
+    $nt->create_friend({ user_id => 911 }); # screen name: richellis
+
+Whenever the C<id> parameter is required and C<user_id> and C<screen_name> are
+also parameters, using any one of them satisfies the requirement.
+
+[% INCLUDE APIDOC class='REST' %]
+
+=head1 Search API Methods
+
+[% INCLUDE APIDOC class='Search' %]
+
+=head1 ERROR HANDLING
+
+When C<Net::Twitter::Lite> encounters a Twitter API error or a network error, it
+throws a C<Net::Twitter::Lite::Error> object.  You can catch and process these
+exceptions by using C<eval> blocks and testing $@:
+
+    eval {
+        my $statuses = $nt->friends_timeline(); # this might die!
+
+        for my $status ( @$statuses ) {
+            #...
+        }
+    };
+    if ( $@ ) {
+        # friends_timeline encountered an error
+
+        if ( blessed $@ && $@->isa('Net::Twitter::Lite::Error' ) {
+            #... use the thrown error obj
+            warn $@->error;
+        }
+        else {
+            # something bad happened!
+            die $@;
+        }
+    }
+
+C<Net::Twitter::Lite::Error> stringifies to something reasonable, so if you don't need
+detailed error information, you can simply treat $@ as a string:
+
+    eval { $nt->update($status) };
+    if ( $@ ) {
+        warn "update failed because: $@\n";
+    }
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Net::Twitter::Lite::Error>
+
+The C<Net::Twitter::Lite> exception object.
+
+=item L<http://apiwiki.twitter.com/Twitter-API-Documentation>
+
+This is the official Twitter API documentation. It describes the methods and their
+parameters in more detail and may be more current than the documentation provided
+with this module.
+
+=item L<LWP::UserAgent::POE>
+
+This LWP::UserAgent compatible class can be used in L<POE> based application
+along with Net::Twitter::Lite to provide concurrent, non-blocking requests.
+
+=back
+
+=head1 SUPPORT
+
+Please report bugs to C<bug-net-twitter@rt.cpan.org>, or through the web
+interface at L<https://rt.cpan.org/Dist/Display.html?Queue=Net-Twitter>.
+
+Join the Net::Twitter IRC channel at L<irc://irc.perl.org/net-twitter>.
+
+Follow net_twitter: L<http://twitter.com/net_twitter>.
+
+Track Net::Twitter::Lite development at L<http://github.com/semifor/net-twitter-lite>.
+
+=head1 AUTHOR
+
+Marc Mims <marc@questright.com>
+
+=head1 LICENSE
+
+Copyright (c) 2009 Marc Mims
+
+The Twitter API itself, and the description text used in this module is:
+
+Copyright (c) 2009 Twitter
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
+
+[% BLOCK APIDOC %]
+
+=over 4
+
+[% FOREACH method IN get_methods_for(class);
+   NEXT IF method.deprecated -%]
+=item B<[% method.name %]>
+
+[% IF method.required.size > 0;
+       pos_params = method.required;
+   ELSIF method.params.size == 1;
+       pos_params = method.params;
+   ELSE;
+       pos_params = [];
+   END;
+   IF pos_params.size -%]
+=item B<[% method.name %]([% pos_params.join(", ") %])>
+
+[% END -%]
+
+[% FOREACH alias IN method.aliases -%]
+=item alias: [% alias %]
+
+[% END -%]
+
+=over 4
+
+=item Parameters: [% IF method.params.size %][% method.params.join(", ") %][% ELSE %]I<none>[% END %]
+
+=item Required: [% IF method.required.size %][% method.required.join(", ") %][% ELSE %]I<none>[% END %]
+
+=back
+
+[% method.description %]
+
+Returns: [% method.returns %]
+
+[% END -%]
+
+=back
+
+[% END %]
