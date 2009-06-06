@@ -1,2 +1,5 @@
+0.01001 2009-06-06
+    - Fixed: accept extra args as a hashref (search behaved this way in 2.12)
+
 0.01000 2009-06-06
     - non-Moose variation of Net::Twitter

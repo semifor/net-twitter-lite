@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-version '0.01000';
+version '0.01001';
 
 # MAINTAINER only exists in the repository (i.e., development) version of the
 # project. This eliminates the need for requireing Template and Net::Twitter.
