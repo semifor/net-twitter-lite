@@ -24,6 +24,7 @@ ExtendedUser
 IM
 IP
 IRC
+Identica
 Mims
 RateLimitStatus
 SMS
@@ -36,6 +37,7 @@ clientver
 favorited
 friended
 geocode
+identica
 inline
 lang
 multipart
@@ -45,6 +47,7 @@ rpp
 stringifies
 timeline
 twitterpm
+twittervision
 un
 unfollow
 url

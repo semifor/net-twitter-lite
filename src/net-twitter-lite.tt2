@@ -16,6 +16,7 @@ sub new {
 
     my $new = bless {
         apiurl     => '[% get_base_url_for('REST')   %]',
+	$args{identica} ? ( apiurl => 'http://identi.ca/api' ) : (),
         searchurl  => '[% get_base_url_for('Search') %]',
         useragent  => __PACKAGE__ . "/$VERSION (Perl)",
         clientname => __PACKAGE__,
@@ -161,17 +162,21 @@ sub _parse_result {
     my $content = $res->content;
     $content =~ s/^"(true|false)"$/$1/;
 
-    my $obj = $self->_from_json($content);
+    # some JSON backends don't handle booleans correctly
+    # TODO: move this fix to JSON::Any
+    my $obj = $content eq 'true'  ? 1
+            : $content eq 'false' ? ''
+            : $self->_from_json($content);
 
     # Twitter sometimes returns an error with status code 200
     if ( $obj && ref $obj eq 'HASH' && exists $obj->{error} ) {
         die Net::Twitter::Lite::Error->new(twitter_error => $obj, http_response => $res);
     }
 
-    return $obj if $res->is_success && $obj;
+    return $obj if $res->is_success && defined $obj;
 
     my $error = Net::Twitter::Lite::Error->new(http_response => $res);
-    $error->twitter_error($obj) if $obj;
+    $error->twitter_error($obj) if ref $obj;
 
     die $error;
 }
@@ -208,19 +213,175 @@ This document describes Net::Twitter::Lite version [% VERSION %]
 
 =head1 DESCRIPTION
 
-This module provides a perl interface to the Twitter APIs, It uses the same API definitions
+This module provides a perl interface to the Twitter APIs. It uses the same API definitions
 as L<Net::Twitter>, but without the extra bells and whistles and without the additional dependencies.
 Same great taste, less filling.
 
 
-This module is a companion to, but not part of the distribution of
-C<Net::Twitter>.  It's API methods and API method documentation are generated
-from C<Net::Twitter> internals.  It exists for those who can not, or prefer not
-to install L<Moose> and its dependencies.
+This module is related to, but is not part of the C<Net::Twitter>
+distribution.  It's API methods and API method documentation are generated
+from C<Net::Twitter>'s internals.  It exists for those who cannot, or prefer
+not to install L<Moose> and its dependencies.
 
 You should consider upgrading to C<Net::Twitter> for additional functionality,
 finer grained control over features, full backwards compatibility with older
 versions of C<Net::Twitter>, and additional error handling options.
+
+=head1 MIGRATING FROM NET::TWITTER 2.x
+
+If you are migrating from Net::Twitter 2.12 (or an earlier version), you may
+need to make some minor changes to your application code in order to user
+Net::Twitter::Lite successfully.
+
+The primary difference is in error handling.  Net::Twitter::Lite throws
+exceptions on error.  It does not support the C<get_error>, C<http_code>, and
+C<http_message> methods used in Net::Twitter 2.12 and prior versions.
+
+Instead of
+
+  # DON'T!
+  my $friends = $nt->friends();
+  if ( $friends ) {
+      # process $friends
+  }
+
+wrap the API call in an eval block:
+
+  # DO!
+  my $friends = eval { $nt->friends() };
+  if ( $friends ) {
+      # process $friends
+  }
+
+Here's a much more complex example taken from application code using
+Net::Twitter 2.12:
+
+  # DON'T!
+  my $friends = $nt->friends();
+  if ( $friends ) {
+      # process $friends
+  }
+  else {
+      my $error = $nt->get_error;
+      if ( ref $error ) {
+          if ( ref($error) eq 'HASH' && exists $error->{error} ) {
+	          $error = $error->{error};
+          }
+          else {
+	          $error = 'Unexpected error type ' . ref($error);
+          }
+      }
+      else {
+          $error = $nt->http_code() . ": " . $nt->http_message;
+      }
+      warn "$error\n";
+  }
+
+The Net::Twitter::Lite equivalent is:
+
+  # DO!
+  eval {
+      my $friends = $nt->friends();
+      # process $friends
+  };
+  warn "$@\n" if $@;
+  return;
+
+In Net::Twitter::Lite, an error can always be treated as a string.  See
+L<Net::Twitter::Lite::Error>.  The HTTP Status Code and HTTP Message are both
+available.  Rather than accessing them via the Net::Twitter::Lite instance,
+you access them via the Net::Twitter::Lite::Error instance thrown as an error.
+
+For example:
+
+  # DO!
+  eval {
+     my $friends = $nt->friends();
+     # process $friends
+  };
+  if ( my $error = $@ ) {
+      if ( blessed $error && $error->isa("Net::Twitter::Lite::Error)
+           && $error->code() == 502 ) {
+          $error = "Fail Whale!";
+      }
+      warn "$error\n";
+  }
+
+=head2 Unsupported Net::Twitter 2.12 options to C<new>
+
+Net::Twitter::Lite does not support the following Net::Twitter 2.12 options to
+C<new>.  It silently ignores them:
+
+=over 4
+
+=item no_fallback
+
+If Net::Twitter::Lite is unable to create an instance of the class specified in
+the C<useragent_class> option to C<new>, it dies, rather than falling back to
+an LWP::UserAgent object.  You really don't want a failure to create the
+C<useragent_class> you specified to go unnoticed.
+
+=item twittervision
+
+Net::Twitter::Lite does not support the TwitterVision API.  Use Net::Twitter,
+instead, if you need it.
+
+=item skip_arg_validation
+
+Net::Twitter::Lite does not API parameter validation.  This is a feature.  If
+Twitter adds a new option to an API method, you can use it immediately by
+passing it in the HASH ref to the API call.
+
+Net::Twitter::Lite relies on Twitter to validate its own parameters.  An
+appropriate exception will be thrown if Twitter reports a parameter error.
+
+=item die_on_validation
+
+See L</skip_arg_validation>.  If Twitter returns an bad parameter error, an
+appropriate exception will be thrown.
+
+=item arrayref_on_error
+
+This option allowed the following idiom in Net::Twitter 2.12:
+
+  # DON'T!
+  for my $friend ( @{ $nt->friends() } ) {
+     # process $friend
+  }
+
+The equivalent Net::Twitter::Lite code is:
+
+  # DO!
+  eval {
+      for my $friend ( @{ $nt->friends() } ) {
+          # process $friend
+      }
+  };
+
+=back
+
+=head2 Unsupported Net::Twitter 2.12 methods
+
+=over 4
+
+=item clone
+
+The C<clone> method was added to Net::Twitter 2.x to allow safe error handling
+in an environment where concurrent requests are handled, for example, when
+using LWP::UserAgent::POE as the C<useragent_class>.  Since Net::Twitter::Lite
+throws exceptions instead of stashing them in the Net::Twitter::Lite instance,
+it is safe in a current request environment, obviating the need for C<clone>.
+
+=item get_error
+
+=item http_code
+
+=item http_message
+
+These methods are replaced by Net::Twitter::Lite::Error.  An instance of that
+class is thrown errors are encountered.
+
+=back
 
 =head1 METHODS AND ARGUMENTS
 
@@ -285,6 +446,11 @@ L<http://apiwiki.twitter.com/FAQ#HowdoIget%E2%80%9CfromMyApp%E2%80%9Dappendedtou
 =item apiurl
 
 The URL for the Twitter API. This defaults to "http://twitter.com".
+
+=item identica
+
+If set to 1 (or any value that evaluates to true), apiurl defaults to
+"http://identi.ca/api".
 
 =back
 

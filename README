@@ -23,20 +23,161 @@ SYNOPSIS
       warn "$@\n" if $@;
 
 DESCRIPTION
-    This module provides a perl interface to the Twitter APIs, It uses the
+    This module provides a perl interface to the Twitter APIs. It uses the
     same API definitions as Net::Twitter, but without the extra bells and
     whistles and without the additional dependencies. Same great taste, less
     filling.
 
-    This module is a companion to, but not part of the distribution of
-    "Net::Twitter". It's API methods and API method documentation are
-    generated from "Net::Twitter" internals. It exists for those who can
-    not, or prefer not to install Moose and its dependencies.
+    This module is related to, but is not part of the "Net::Twitter"
+    distribution. It's API methods and API method documentation are
+    generated from "Net::Twitter"'s internals. It exists for those who
+    cannot, or prefer not to install Moose and its dependencies.
 
     You should consider upgrading to "Net::Twitter" for additional
     functionality, finer grained control over features, full backwards
     compatibility with older versions of "Net::Twitter", and additional
     error handling options.
+
+MIGRATING FROM NET::TWITTER 2.x
+    If you are migrating from Net::Twitter 2.12 (or an earlier version), you
+    may need to make some minor changes to your application code in order to
+    user Net::Twitter::Lite successfully.
+
+    The primary difference is in error handling. Net::Twitter::Lite throws
+    exceptions on error. It does not support the "get_error", "http_code",
+    and "http_message" methods used in Net::Twitter 2.12 and prior versions.
+
+    Instead of
+
+      # DON'T!
+      my $friends = $nt->friends();
+      if ( $friends ) {
+          # process $friends
+      }
+
+    wrap the API call in an eval block:
+
+      # DO!
+      my $friends = eval { $nt->friends() };
+      if ( $friends ) {
+          # process $friends
+      }
+
+    Here's a much more complex example taken from application code using
+    Net::Twitter 2.12:
+
+      # DON'T!
+      my $friends = $nt->friends();
+      if ( $friends ) {
+          # process $friends
+      }
+      else {
+          my $error = $nt->get_error;
+          if ( ref $error ) {
+              if ( ref($error) eq 'HASH' && exists $error->{error} ) {
+                      $error = $error->{error};
+              }
+              else {
+                      $error = 'Unexpected error type ' . ref($error);
+              }
+          }
+          else {
+              $error = $nt->http_code() . ": " . $nt->http_message;
+          }
+          warn "$error\n";
+      }
+
+    The Net::Twitter::Lite equivalent is:
+
+      # DO!
+      eval {
+          my $friends = $nt->friends();
+          # process $friends
+      };
+      warn "$@\n" if $@;
+      return;
+
+    In Net::Twitter::Lite, an error can always be treated as a string. See
+    Net::Twitter::Lite::Error. The HTTP Status Code and HTTP Message are
+    both available. Rather than accessing them via the Net::Twitter::Lite
+    instance, you access them via the Net::Twitter::Lite::Error instance
+    thrown as an error.
+
+    For example:
+
+      # DO!
+      eval {
+         my $friends = $nt->friends();
+         # process $friends
+      };
+      if ( my $error = $@ ) {
+          if ( blessed $error && $error->isa("Net::Twitter::Lite::Error)
+               && $error->code() == 502 ) {
+              $error = "Fail Whale!";
+          }
+          warn "$error\n";
+      }
+
+  Unsupported Net::Twitter 2.12 options to "new"
+    Net::Twitter::Lite does not support the following Net::Twitter 2.12
+    options to "new". It silently ignores them:
+
+    no_fallback
+        If Net::Twitter::Lite is unable to create an instance of the class
+        specified in the "useragent_class" option to "new", it dies, rather
+        than falling back to an LWP::UserAgent object. You really don't want
+        a failure to create the "useragent_class" you specified to go
+        unnoticed.
+
+    twittervision
+        Net::Twitter::Lite does not support the TwitterVision API. Use
+        Net::Twitter, instead, if you need it.
+
+    skip_arg_validation
+        Net::Twitter::Lite does not API parameter validation. This is a
+        feature. If Twitter adds a new option to an API method, you can use
+        it immediately by passing it in the HASH ref to the API call.
+
+        Net::Twitter::Lite relies on Twitter to validate its own parameters.
+        An appropriate exception will be thrown if Twitter reports a
+        parameter error.
+
+    die_on_validation
+        See "skip_arg_validation". If Twitter returns an bad parameter
+        error, an appropriate exception will be thrown.
+
+    arrayref_on_error
+        This option allowed the following idiom in Net::Twitter 2.12:
+
+          # DON'T!
+          for my $friend ( @{ $nt->friends() } ) {
+             # process $friend
+          }
+
+        The equivalent Net::Twitter::Lite code is:
+
+          # DO!
+          eval {
+              for my $friend ( @{ $nt->friends() } ) {
+                  # process $friend
+              }
+          };
+
+  Unsupported Net::Twitter 2.12 methods
+    clone
+        The "clone" method was added to Net::Twitter 2.x to allow safe error
+        handling in an environment where concurrent requests are handled,
+        for example, when using LWP::UserAgent::POE as the
+        "useragent_class". Since Net::Twitter::Lite throws exceptions
+        instead of stashing them in the Net::Twitter::Lite instance, it is
+        safe in a current request environment, obviating the need for
+        "clone".
+
+    get_error
+    http_code
+    http_message
+        These methods are replaced by Net::Twitter::Lite::Error. An instance
+        of that class is thrown errors are encountered.
 
 METHODS AND ARGUMENTS
     new This constructs a "Net::Twitter::Lite" object. It takes several
@@ -90,6 +231,10 @@ METHODS AND ARGUMENTS
         apiurl
             The URL for the Twitter API. This defaults to
             "http://twitter.com".
+
+        identica
+            If set to 1 (or any value that evaluates to true), apiurl
+            defaults to "http://identi.ca/api".
 
     credentials($username, $password)
         Set the credentials for Basic Authentication. This is helpful for
