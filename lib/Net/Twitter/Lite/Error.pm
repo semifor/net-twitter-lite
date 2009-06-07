@@ -12,7 +12,7 @@ use overload '""' => \&error;
 
 =head1 NAME
 
-Net::Twitter::Lite::Error - Encapsulates errors throw by Net::Twitter::Lite
+Net::Twitter::Lite::Error - Encapsulates errors thrown by Net::Twitter::Lite
 
 =head1 SYNOPSIS
 
