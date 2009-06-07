@@ -4,7 +4,7 @@ use strict;
 
 use overload '""' => \&error;
 
-# This is basically a duplicate of Net::Twitter::Error, only without Moose.  I
+# This is basically a duplicate of Net::Twitter::Lite::Error, only without Moose.  I
 # considered creating a new Net-Twitter-Error distribution so that it could be
 # shared by both Net::Twitter and Net::Twitter::Lite.  But there's a strong
 # argument for making Net::Twitter::Lite depend upon as few modules as
@@ -12,19 +12,19 @@ use overload '""' => \&error;
 
 =head1 NAME
 
-Net::Twitter::Error - Encapsulates errors throw by Net::Twitter
+Net::Twitter::Lite::Error - Encapsulates errors throw by Net::Twitter::Lite
 
 =head1 SYNOPSIS
 
-  use Net::Twitter;
-  my $nt = Net::Twitter->new;
+  use Net::Twitter::Lite;
+  my $nt = Net::Twitter::Lite->new;
   my $r = eval { $nt->friends_timeline };
   warn "$@\n" if $@;
 
 =head1 DESCRIPTION
 
-B<Net::Twitter::Error> encapsulates errors thrown by C<Net::Twitter>.  A
-C<Net::Twitter::Error> object will contain an C<HTTP::Response>, and a HASHREF
+B<Net::Twitter::Lite::Error> encapsulates errors thrown by C<Net::Twitter::Lite>.  A
+C<Net::Twitter::Lite::Error> object will contain an C<HTTP::Response>, and a HASHREF
 containing Twitter API error information if one was returned by Twitter.
 
 =head1 METHODS
@@ -35,11 +35,11 @@ containing Twitter API error information if one was returned by Twitter.
 
 =item new
 
-Constructs an C<Net::Twitter::Error> object with an HTTP::Response and optionally
+Constructs an C<Net::Twitter::Lite::Error> object with an HTTP::Response and optionally
 a Twitter error HASH ref.  It takes HASH of arguments.  Examples:
 
-  my $e = Net::Twitter::Error->new(http_response => $res, twitter_error => $te);
-  my $e = Net::Twitter::Error->new(http_response => $res);
+  my $e = Net::Twitter::Lite::Error->new(http_response => $res, twitter_error => $te);
+  my $e = Net::Twitter::Lite::Error->new(http_response => $res);
 
 =cut
 
@@ -106,11 +106,11 @@ sub message {
 Returns an error message as a string.  The message be the C<error> element of
 the encapsulated Twitter API HASH ref, if there is one.  Otherwise it will
 return a string containing the HTTP Status Code and Message.  If the
-C<Net::Twitter::Error> instance does not contain either an HTTP::Response or a
+C<Net::Twitter::Lite::Error> instance does not contain either an HTTP::Response or a
 Twitter Error HASH ref, or the HTTP::Response has no status code or message,
 C<error> returns the string '[unknown]'.
 
-A Net::Twitter::Error stringifies to the C<error> message.
+A Net::Twitter::Lite::Error stringifies to the C<error> message.
 
 =cut
 
