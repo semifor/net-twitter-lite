@@ -27,6 +27,7 @@ IRC
 Identica
 Mims
 RateLimitStatus
+SavedSearch
 SMS
 Str
 Un
