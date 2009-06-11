@@ -41,12 +41,6 @@ sub new {
     $new->{ua}->default_header('X-Twitter-Client-URL'     => $new->{clienturl});
     $new->{ua}->env_proxy;
 
-    $new->{ua}->add_handler(request_prepare => sub {
-        if ( exists $new->{username} && exists $new->{password} ) {
-            shift->authorization_basic($new->{username}, $new->{password});
-        }
-    });
-
     return $new;
 }
 

@@ -5,6 +5,9 @@ use Test::More;
 
 use lib qw(t/lib);
 
+eval 'use LWP::UserAgent 5.819';
+plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
+
 my $screen_name = 'net_twitter';
 my $message_id  = 1234;
 my $status      = 'Hello, world!';

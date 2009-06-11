@@ -1,3 +1,6 @@
+0.02001 2009-06-11
+    - Reverted the 'forceauth' feature; it requires too recent LWP::UserAgent
+
 0.02000 2009-06-07
     - Added support for the saved_searches API methods
 

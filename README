@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.02000
+    This document describes Net::Twitter::Lite version 0.02001
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -215,7 +215,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.02000 (Perl)".
+            "Net::Twitter::Lite/0.02001 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
