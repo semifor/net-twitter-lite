@@ -16,6 +16,7 @@ sub new {
 
     my $new = bless {
         apiurl     => '[% get_base_url_for('REST')   %]',
+        apirealm   => 'Twitter API',
 	$args{identica} ? ( apiurl => 'http://identi.ca/api' ) : (),
         searchurl  => '[% get_base_url_for('Search') %]',
         useragent  => __PACKAGE__ . "/$VERSION (Perl)",
@@ -41,16 +42,25 @@ sub new {
     $new->{ua}->default_header('X-Twitter-Client-URL'     => $new->{clienturl});
     $new->{ua}->env_proxy;
 
+    $new->credentials(@{$new}{qw/username password/})
+        if exists $new->{username} && exists $new->{password};
+
     return $new;
 }
 
 sub credentials {
     my $self = shift;
+    my ($username, $password) = @_;
 
     croak "exected a username and password" unless @_ == 2;
 
-    $self->{username} = shift;
-    $self->{password} = shift;
+    $self->{username} = $username;
+    $self->{password} = $password;
+
+    my $uri = URI->new($self->{apiurl});
+    my $netloc = join ':', $uri->host, $uri->port;
+
+    $self->{ua}->credentials($netloc, $self->{apirealm}, $username, $password);
 }
 
 my $api_def = [

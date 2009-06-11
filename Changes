@@ -1,4 +1,4 @@
-0.02001 2009-06-11
+0.02002 2009-06-11
     - Reverted the 'forceauth' feature; it requires too recent LWP::UserAgent
 
 0.02000 2009-06-07
