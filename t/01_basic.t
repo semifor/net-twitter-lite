@@ -3,8 +3,6 @@ use warnings;
 use strict;
 use Test::More;
 
-use lib qw(t/lib);
-
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
 

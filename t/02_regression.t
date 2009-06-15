@@ -4,6 +4,9 @@ use strict;
 
 use Test::More tests => 2;
 
+eval 'use LWP::UserAgent 5.819';
+plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
+
 use Net::Twitter::Lite;
 
 my $nt = Net::Twitter::Lite->new;
