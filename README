@@ -185,10 +185,30 @@ METHODS AND ARGUMENTS
 
         username
             This is the screen name or email used to authenticate with
-            Twitter.
+            Twitter. Use this option for Basic Authentication, only.
 
         password
-            This is the password used to authenticate with Twitter.
+            This is the password used to authenticate with Twitter. Use this
+            option for Basic Authentication, only.
+
+        consumer_key
+            A string containing the OAuth consumer key provided by Twitter
+            when an application is registered. Use this option for OAuth
+            authentication, only.
+
+        consumer_secret
+            A string containing the OAuth consumer secret. Use this option
+            for OAuth authentication, only. the "OAuth" trait is included.
+
+        oauth_urls
+            A HASH ref of URLs to be used with OAuth authentication.
+            Defaults to:
+
+              {
+                  request_token_url => "http://twitter.com/oauth/request_token",
+                  authorization_url => "http://twitter.com/oauth/authorize",
+                  access_token_url  => "http://twitter.com/oauth/access_token",
+              }
 
         clientname
             The value for the "X-Twitter-Client-Name" HTTP header. It
@@ -236,9 +256,45 @@ METHODS AND ARGUMENTS
             If set to 1 (or any value that evaluates to true), apiurl
             defaults to "http://identi.ca/api".
 
+  BASIC AUTHENTICATION METHODS
     credentials($username, $password)
         Set the credentials for Basic Authentication. This is helpful for
         managing multiple accounts.
+
+  OAUTH METHODS
+    authorized
+        Whether the client has the necessary credentials to be authorized.
+
+        Note that the credentials may be wrong and so the request may fail.
+
+    request_access_token [PIN]
+        Request the access token and access token secret for this user.
+
+        The user must have authorized this app at the url given by
+        "get_authorization_url" first.
+
+        For desktop applications, the Twitter authorization page will
+        present the user with a PIN number. Prompt the user for the PIN
+        number, and pass it as an argument to request_access_token.
+
+        Returns the access token and access token secret but also sets them
+        internally so that after calling this method, you can immediately
+        call API methods requiring authentication.
+
+    get_authorization_url
+        Get the URL used to authorize the user. Returns a "URI" object.
+
+    access_token
+        Get or set the access token.
+
+    access_token_secret
+        Get or set the access token secret.
+
+    request_token
+        Get or set the request token.
+
+    request_token_secret
+        Get or set the request token secret.
 
 API METHODS AND ARGUMENTS
     Most Twitter API methods take parameters. All Net::Twitter::Lite API
@@ -884,6 +940,111 @@ ERROR HANDLING
         if ( $@ ) {
             warn "update failed because: $@\n";
         }
+
+AUTHENTICATION
+    Net::Twitter::Lite currently supports both Basic Authentication and
+    OAuth. The choice of authentication strategies is determined by the
+    options passed to "new" or the use of the "credentials" method. An error
+    will be thrown if options for both strategies are provided.
+
+  BASIC AUTHENTICATION
+    To use Basic Authentication, pass the "username" and "password" options
+    to "new", or call "credentials" to set them. When Basic Authentication
+    is used, the "Authorization" header is set on each authenticated API
+    call.
+
+  OAUTH AUTHENTICATION
+    To use OAuth authentication, pass the "consumer_key" and
+    "consumer_secret" options to new.
+
+    Net::OAuth::Simple must be installed in order to use OAuth and an error
+    will be thrown if OAuth is attempted without it. Net::Twitter::Lite does
+    not *require* Net::OAuth::Simple, making OAuth an optional feature.
+
+  OAUTH EXAMPLES
+    Here's how to authorize users as a desktop app mode:
+
+      use Net::Twitter::Lite;
+
+      my $nt = Net::Twitter::Lite->new(
+          consumer_key    => "YOUR-CONSUMER-KEY",
+          consumer_secret => "YOUR-CONSUMER-SECRET",
+      );
+
+      # You'll save the token and secret in cookie, config file or session database
+      my($access_token, $access_token_secret) = restore_tokens();
+      if ($access_token && $access_token_secret) {
+          $nt->access_token($access_token);
+          $nt->access_token_secret($access_token_secret);
+      }
+
+      unless ( $nt->is_authorized ) {
+          # The client is not yet authorized: Do it now
+          print "Authorize this app at ", $nt->get_authorization_url, " and enter the PIN#\n";
+
+          my $pin = <STDIN>; # wait for input
+          chomp $pin;
+
+          my($access_token, $access_token_secret) = $nt->request_access_token($pin);
+          save_tokens($access_token, $access_token_secret); # if necessary
+      }
+
+      # Everything's ready
+
+    In a web application mode, you need to save the oauth_token and
+    oauth_token_secret somewhere when you redirect the user to the OAuth
+    authorization URL.
+
+      sub twitter_authorize : Local {
+          my($self, $c) = @_;
+
+          my $nt = Net::Twitter::Lite->new(%param);
+          my $url = $nt->get_authorization_url;
+
+          $c->response->cookies->{oauth} = {
+              value => {
+                  token => $nt->request_token,
+                  token_secret => $nt->request_token_secret,
+              },
+          };
+
+          $c->response->redirect($url);
+      }
+
+    And when the user returns back, you'll reset those request token and
+    secret to upgrade the request token to access token.
+
+      sub twitter_auth_callback : Local {
+          my($self, $c) = @_;
+
+          my %cookie = $c->request->cookies->{oauth}->value;
+
+          my $nt = Net::Twitter::Lite->new(%param);
+          $nt->request_token($cookie{token});
+          $nt->request_token_secret($cookie{token_secret});
+
+          my($access_token, $access_token_secret)
+              = $nt->request_access_token;
+
+          # Save $access_token and $access_token_secret in the database associated with $c->user
+      }
+
+    Later on, you can retrieve and reset those access token and secret
+    before calling any Twitter API methods.
+
+      sub make_tweet : Local {
+          my($self, $c) = @_;
+
+          my($access_token, $access_token_secret) = ...;
+
+          my $nt = Net::Twitter::Lite->new(%param);
+          $nt->access_token($access_token);
+          $nt->access_token_secret($access_token_secret);
+
+          # Now you can call any Net::Twitter::Lite API methods on $nt
+          my $status = $c->req->param('status');
+          my $res = $nt->update({ status => $status });
+      }
 
 SEE ALSO
     Net::Twitter::Lite::Error
