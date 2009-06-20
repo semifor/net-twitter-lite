@@ -263,7 +263,7 @@ sub _basic_authenticated_request {
     }
 
     if ( $self->{username} && $self->{password} ) {
-        $msg->header(HTTP::Header->new->authorization_basic(@{$self}{qw/username password/}));
+        $msg->headers->authorization_basic(@{$self}{qw/username password/});
     }
 
     return $self->{ua}->request($msg);

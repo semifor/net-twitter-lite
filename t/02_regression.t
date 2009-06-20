@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
@@ -30,3 +30,8 @@ my $search_term = "intelligent life";
 my $r = $nt->search($search_term, { page => 2 });
 is $args{q},    $search_term, "q as positional arg";
 is $args{page}, 2,            "page parameter set";
+
+# Basic Auth
+$nt->credentials('barney','rubble');
+$r = $nt->user_timeline;
+like $request->header('Authorization'), qr/^Basic /, 'Basic Auth header';
