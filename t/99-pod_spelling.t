@@ -26,6 +26,8 @@ IP
 IRC
 Identica
 Mims
+OAUTH
+OAuth
 RateLimitStatus
 SavedSearch
 SMS
