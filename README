@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.02002
+    This document describes Net::Twitter::Lite version 0.03000
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -75,10 +75,10 @@ MIGRATING FROM NET::TWITTER 2.x
           my $error = $nt->get_error;
           if ( ref $error ) {
               if ( ref($error) eq 'HASH' && exists $error->{error} ) {
-                      $error = $error->{error};
+                  $error = $error->{error};
               }
               else {
-                      $error = 'Unexpected error type ' . ref($error);
+                  $error = 'Unexpected error type ' . ref($error);
               }
           }
           else {
@@ -235,7 +235,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.02002 (Perl)".
+            "Net::Twitter::Lite/0.03000 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -267,15 +267,18 @@ METHODS AND ARGUMENTS
 
         Note that the credentials may be wrong and so the request may fail.
 
-    request_access_token [PIN]
+    request_access_token
         Request the access token and access token secret for this user.
+        Takes a HASH of arguments. The "verifier" argument is required. See
+        "OAUTH EXAMPLES".
 
         The user must have authorized this app at the url given by
         "get_authorization_url" first.
 
         For desktop applications, the Twitter authorization page will
         present the user with a PIN number. Prompt the user for the PIN
-        number, and pass it as an argument to request_access_token.
+        number, and pass it as the "verifier" argument to
+        request_access_token.
 
         Returns the access token and access token secret but also sets them
         internally so that after calling this method, you can immediately
@@ -295,6 +298,15 @@ METHODS AND ARGUMENTS
 
     request_token_secret
         Get or set the request token secret.
+
+    access_token_url
+        Get or set the access_token URL.
+
+    authorization_url
+        Get or set the authorization URL.
+
+    request_token_url
+        Get or set the request_token URL.
 
 API METHODS AND ARGUMENTS
     Most Twitter API methods take parameters. All Net::Twitter::Lite API
@@ -962,6 +974,9 @@ AUTHENTICATION
     not *require* Net::OAuth::Simple, making OAuth an optional feature.
 
   OAUTH EXAMPLES
+    See the "examples" directory included in this distribution for full
+    working examples using OAuth.
+
     Here's how to authorize users as a desktop app mode:
 
       use Net::Twitter::Lite;
@@ -985,7 +1000,7 @@ AUTHENTICATION
           my $pin = <STDIN>; # wait for input
           chomp $pin;
 
-          my($access_token, $access_token_secret) = $nt->request_access_token($pin);
+          my($access_token, $access_token_secret) = $nt->request_access_token(verifier => $pin);
           save_tokens($access_token, $access_token_secret); # if necessary
       }
 
