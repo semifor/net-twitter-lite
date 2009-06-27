@@ -1,5 +1,4 @@
 Changes
-examples/oauth_desktop.pl
 examples/oauth_webapp.pl
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm

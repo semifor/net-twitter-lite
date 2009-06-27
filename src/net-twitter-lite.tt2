@@ -225,35 +225,37 @@ sub _authenticated_request {
 }
 
 sub _oauth_authenticated_request {
-    my ($self, $http_method, $uri, $args) = @_;
-
-    my $request = $self->_make_oauth_request(
-        'protected resource',
-        request_url    => $uri,
-        request_method => $http_method,
-        token          => $self->access_token,
-        token_secret   => $self->access_token_secret,
-    );
+    my ($self, $http_method, $uri, $args, $authenticate) = @_;
 
     my $msg;
-
     if ( $http_method eq 'GET' ) {
         $uri->query_form($args);
-        $msg = GET($uri, Authorization => $request->to_authorization_header);
+        $msg = GET($uri);
     }
     elsif ( $http_method eq 'POST' ) {
         delete $args->{source}; # no necessary with OAuth requests
-        $msg = POST($request->request_url, $args, Authorization => $request->to_authorization_header);
+        $msg = POST($uri, $args);
+    }
+
+    if ( $authenticate && $self->authorized ) {
+        my $request = $self->_make_oauth_request(
+            'protected resource',
+            request_url    => $uri,
+            request_method => $http_method,
+            token          => $self->access_token,
+            token_secret   => $self->access_token_secret,
+        );
+
+        $msg->header(Authorization => $request->to_authorization_header);
     }
 
     return $self->{ua}->request($msg);
 }
 
 sub _basic_authenticated_request {
-    my ($self, $http_method, $uri, $args) = @_;
+    my ($self, $http_method, $uri, $args, $authenticate) = @_;
 
     my $msg;
-
     if ( $http_method eq 'GET' ) {
         $uri->query_form($args);
         $msg = GET($uri);
@@ -262,7 +264,7 @@ sub _basic_authenticated_request {
         $msg = POST($uri, $args);
     }
 
-    if ( $self->{username} && $self->{password} ) {
+    if ( $authenticate && $self->{username} && $self->{password} ) {
         $msg->headers->authorization_basic(@{$self}{qw/username password/});
     }
 
@@ -281,6 +283,7 @@ my $api_def = [
             required    => [ qw/[% method.required.join(' ') %]/ ],
             add_source  => [% method.add_source %],
             deprecated  => [% method.deprecated %],
+            authenticate => [% method.authenticate %],
         } ],
 [% END -%]
     ] ],
@@ -330,6 +333,10 @@ while ( @$api_def ) {
             }
             $args->{source} ||= $self->{source} if $options{add_source};
 
+            my $authenticate = exists $args->{authenticate}  ? delete $args->{authenticate}
+                             : $options{authenticate}
+                             ;
+
             my $local_path = $modify_path->($path, $args);
             
             my $uri = URI->new($base_url->($self) . "/$local_path.json");
@@ -337,7 +344,9 @@ while ( @$api_def ) {
             # upgrade params to UTF-8 so latin-1 literals can be handled as UTF-8 too
             utf8::upgrade $_ for values %$args;
 
-            return $self->_parse_result($self->_authenticated_request($options{method}, $uri, $args));
+            return $self->_parse_result(
+                $self->_authenticated_request($options{method}, $uri, $args, $authenticate)
+            );
         };
 
         no strict 'refs';
@@ -790,6 +799,17 @@ Aliases support both the HASH ref and convenient forms:
 Methods that support the C<page> parameter expect page numbers E<gt> 0.  Twitter silently
 ignores invalid C<page> values.  So C<< { page => 0 } >> produces the same result
 as C<< { page => 1 } >>.
+
+In addition to the arguments specified for each API method described below, an
+additional C<authenticate> parameter can be passed.  To request an
+C<Authorization> header, pass C<< authenticated => 1 >>; to suppress an
+authentication header, pass C<< authentication => 0 >>.  Even if requested, an
+Authorization header will not be added if there are no user credentials
+(username and password for Basic Authentication; access tokens for OAuth).
+
+This is probably only useful for the L</rate_limit_status> method in the REST
+API, since it returns different values for an authenticated and a
+non-authenticated call.
 
 =head1 REST API Methods
 

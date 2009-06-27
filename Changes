@@ -1,3 +1,10 @@
+0.04000 2009-06-27
+    - Added support for the "authenticate" parameter to API methods
+
+    - Twitter API update:
+        - Added screen_name and user_id parameters to new_direct_message
+        - Added show_friendship method (friendships/show.json)
+
 0.03001 2009-06-20
     - Fixed Basic Auth regression error
 

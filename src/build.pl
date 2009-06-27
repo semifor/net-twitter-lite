@@ -38,4 +38,3 @@ sub get_base_url_for {
 
     return $class->_base_url($nt);
 }
-
