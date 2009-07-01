@@ -2,10 +2,12 @@
 use warnings;
 use strict;
 
-use Test::More tests => 3;
+use Test::More;
 
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
+
+plan tests => 3;
 
 use Net::Twitter::Lite;
 
