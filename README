@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.04000
+    This document describes Net::Twitter::Lite version 0.04001
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -37,6 +37,13 @@ DESCRIPTION
     functionality, finer grained control over features, full backwards
     compatibility with older versions of "Net::Twitter", and additional
     error handling options.
+
+IMPORTANT
+    Beginning with version 0.03, it is necessary for web applications using
+    OAuth authentication to pass the "callback" parameter to
+    "get_authorization_url". In the absence of a callback parameter, when
+    the user authorizes the application a PIN number is displayed rather
+    than redirecting the user back to your site.
 
 MIGRATING FROM NET::TWITTER 2.x
     If you are migrating from Net::Twitter 2.12 (or an earlier version), you
@@ -235,7 +242,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.04000 (Perl)".
+            "Net::Twitter::Lite/0.04001 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -284,8 +291,11 @@ METHODS AND ARGUMENTS
         internally so that after calling this method, you can immediately
         call API methods requiring authentication.
 
-    get_authorization_url
-        Get the URL used to authorize the user. Returns a "URI" object.
+    get_authorization_url(callback => $callback_url)
+        Get the URL used to authorize the user. Returns a "URI" object. For
+        web applications, pass your applications callback URL as the
+        "callback" parameter. No arguments are required for desktop
+        applications ("callback" defaults to "oob", out-of-band).
 
     access_token
         Get or set the access token.
@@ -1048,7 +1058,7 @@ AUTHENTICATION
           my($self, $c) = @_;
 
           my $nt = Net::Twitter::Lite->new(%param);
-          my $url = $nt->get_authorization_url;
+          my $url = $nt->get_authorization_url(callback => $callbackurl);
 
           $c->response->cookies->{oauth} = {
               value => {

@@ -1,17 +1,8 @@
 use inc::Module::Install;
 
-version '0.04000';
+version '0.04001';
 
-# MAINTAINER only exists in the repository (i.e., development) version of the
-# project. This eliminates the need for requireing Template and Net::Twitter.
-# lib/Net/Twitter/Lite.pm is created dynamically from a TT2 template and
-# introspecting Net::Twitter.  Net::Twitter is Moose based.  Net::Twitter::Lite
-# provides the REST and Search API without requiring Moose.  Moose, Template,
-# and Net::Twitter are only needed by the maintainer to prepare a distribution.
-#
-# To build lib/Net/Twitter/Lite.pm from src/net-twitter-lite.tt2: touch
-# MAINTAINER then run "perl Makefile.PL"
-if ( -e 'MAINTAINER' ) {
+if ( $Module::Install::AUTHOR ) {
     eval "use Net::Twitter::Core";
     die $@ if $@;
 
@@ -27,20 +18,42 @@ if ( -e 'MAINTAINER' ) {
 
 name        'Net-Twitter-Lite';
 all_from    'lib/Net/Twitter/Lite.pm';
-requires    'JSON::Any' => 1.19;
+
+# core
+requires    'Carp';
+requires    'Digest::SHA';
+
+# CPAN
+requires    'JSON::Any'      => '1.21';
 requires    'URI::Escape';
 requires    'LWP::UserAgent' => 2.032;
+
+# Don't rely on the JSON::Any requirement to pull in a suitable JSON backend.
+# The user may already have JSON::Any installed, but since removed all valid
+# providers.  (Yes, this seems to have happened in the wild.)
+sub has_json_handler () {
+    my @order = qw/JSON::XS JSON::DWIW JSON/;
+    for my $provider ( @order ) {
+        eval "require $provider";
+        return 1 unless $@;
+    }
+    return;
+}
+
+has_json_handler || requires JSON => '2.02';
+
 recommends  'JSON::XS';
-recommends  'Net::OAuth'    => 0.16;
+recommends  'Net::OAuth'     => 0.16;
 
 no_index    directory => 'src';
 no_index    directory => 'examples';
 
 # resources
-repository 'git://github.com/semifor/Net-Twitter-Lite.git';
 homepage   'http://github.com/semifor/Net-Twitter-Lite';
 bugtracker 'http://rt.cpan.org/Public/Dist/Display.html?Name=Net-Twitter-Lite';
 
+auto_set_repository;
+auto_manifest;
 auto_install;
 
 WriteAll;
