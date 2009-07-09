@@ -1,3 +1,9 @@
+0.04001 2009-07-07
+    - Added documentation for the required callback param to
+      get_authorization_url
+    - New nonce algorithm to eliminate potential duplicates on forked
+      processes
+
 0.04000 2009-06-27
     - Added support for the "authenticate" parameter to API methods
 
