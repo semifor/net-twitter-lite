@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.04001
+    This document describes Net::Twitter::Lite version 0.05000
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -242,7 +242,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.04001 (Perl)".
+            "Net::Twitter::Lite/0.05000 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -262,6 +262,22 @@ METHODS AND ARGUMENTS
         identica
             If set to 1 (or any value that evaluates to true), apiurl
             defaults to "http://identi.ca/api".
+
+        ssl If set to 1, an SSL connection will be used for all API calls.
+            Defaults to 0.
+
+        netrc
+            If set to 1, Net::Twitter::Lite will look up the host portion of
+            the "apiurl" in the ".netrc" file to obtain the u"username" and
+            "password" arguments.
+
+               # in .netrc
+               machine twitter.com
+               login YOUR_TWITTER_USER_NAME
+               password YOUR_TWITTER_PASSWORD
+
+               # in your perl program
+               $nt = Net::Twitter::Lite->new(netrc => 1);
 
   BASIC AUTHENTICATION METHODS
     credentials($username, $password)

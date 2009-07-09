@@ -1,3 +1,6 @@
+0.05000 2009-07-09
+    - Added ssl and netrc arguments to new
+
 0.04001 2009-07-07
     - Added documentation for the required callback param to
       get_authorization_url
