@@ -28,6 +28,16 @@ requires    'JSON::Any'      => '1.21';
 requires    'URI::Escape';
 requires    'LWP::UserAgent' => 2.032;
 
+feature 'OAuth Authentication',
+    -default     => 1,
+    'Net::OAuth' => '0.16',
+    ;
+
+feature '.netrc support',
+    -default     => 0,
+    'Net::Netrc' => 0,
+    ;
+
 # Don't rely on the JSON::Any requirement to pull in a suitable JSON backend.
 # The user may already have JSON::Any installed, but since removed all valid
 # providers.  (Yes, this seems to have happened in the wild.)
@@ -41,9 +51,6 @@ sub has_json_handler () {
 }
 
 has_json_handler || requires JSON => '2.02';
-
-recommends  'JSON::XS';
-recommends  'Net::OAuth'     => 0.16;
 
 no_index    directory => 'src';
 no_index    directory => 'examples';
