@@ -98,7 +98,7 @@ Returns the HTTP Status Message from the encapsulated HTTP::Response
 sub message {
     my $self = shift;
 
-    return exists $self->{http_reponse} && $self->{http_response}->message;
+    return exists $self->{http_response} && $self->{http_response}->message;
 }
 
 =item error
