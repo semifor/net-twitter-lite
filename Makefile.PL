@@ -22,6 +22,7 @@ all_from    'lib/Net/Twitter/Lite.pm';
 # core
 requires    'Carp';
 requires    'Digest::SHA';
+requires    'Encode';
 
 # CPAN
 requires    'JSON::Any'      => '1.21';

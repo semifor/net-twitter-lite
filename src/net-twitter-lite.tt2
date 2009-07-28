@@ -12,6 +12,9 @@ use JSON::Any qw/XS DWIW JSON/;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
 use Digest::SHA;
+use Encode;
+
+my $json_handler = JSON::Any->new(utf8 => 1);
 
 sub new {
     my ($class, %args) = @_;
@@ -361,7 +364,7 @@ while ( @$api_def ) {
             my $uri = URI->new($base_url->($self) . "/$local_path.json");
 
             # upgrade params to UTF-8 so latin-1 literals can be handled as UTF-8 too
-            utf8::upgrade $_ for values %$args;
+            utf8::upgrade($_), $_ = encode('utf-8', $_) for values %$args;
 
             return $self->_parse_result(
                 $self->_authenticated_request($options{method}, $uri, $args, $authenticate)
@@ -376,7 +379,7 @@ while ( @$api_def ) {
 sub _from_json {
     my ($self, $json) = @_;
 
-    return eval { JSON::Any->from_json($json) };
+    return eval { $json_handler->from_json($json) };
 }
 
 sub _parse_result {
@@ -387,11 +390,7 @@ sub _parse_result {
     my $content = $res->content;
     $content =~ s/^"(true|false)"$/$1/;
 
-    # some JSON backends don't handle booleans correctly
-    # TODO: move this fix to JSON::Any
-    my $obj = $content eq 'true'  ? 1
-            : $content eq 'false' ? ''
-            : $self->_from_json($content);
+    my $obj = $self->_from_json($content);
 
     # Twitter sometimes returns an error with status code 200
     if ( $obj && ref $obj eq 'HASH' && exists $obj->{error} ) {
