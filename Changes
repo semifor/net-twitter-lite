@@ -1,5 +1,11 @@
+0.06002 2009-07-29
+    - Fix: spurious OAuth signature failures (proted from Net::Twitter)
+
+0.06001 2009-07-28
+    - Fix: OAuth / unicode conflict
+
 0.06000 2009-07-28
-    - Bug fix: OAuth signatures on POST requests (Peter Bray)
+    - Bug fix: OAuth signatures on POST requests (Galen Huntington)
     - Unicode fixes
 
 0.05000 2009-07-09
