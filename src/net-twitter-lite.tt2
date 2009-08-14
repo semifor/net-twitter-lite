@@ -8,7 +8,7 @@ $VERSION = eval { $VERSION };
 
 use Carp;
 use URI::Escape;
-use JSON::Any qw/XS DWIW JSON/;
+use JSON::Any qw/XS JSON/;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
 use Digest::SHA;
