@@ -12,7 +12,7 @@ use JSON::Any qw/XS JSON/;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
 use Digest::SHA;
-use Encode;
+use Encode qw/encode_utf8/;
 
 my $json_handler = JSON::Any->new(utf8 => 1);
 
@@ -252,8 +252,20 @@ sub _authenticated_request {
     $self->$authenticator(@_);
 }
 
+sub _encode_args {
+    my $args = shift;
+
+    # Values need to be utf-8 encoded.  Because of a perl bug, exposed when
+    # client code does "use utf8", keys must also be encoded as well.
+    # see: http://www.perlmonks.org/?node_id=668987
+    # and: http://perl5.git.perl.org/perl.git/commit/eaf7a4d2
+    return { map { encode_utf8 $_ } %$args };
+}
+
 sub _oauth_authenticated_request {
     my ($self, $http_method, $uri, $args, $authenticate) = @_;
+    
+    delete $args->{source}; # not necessary with OAuth requests
 
     my $msg;
     if ( $authenticate && $self->authorized ) {
@@ -283,10 +295,9 @@ sub _oauth_authenticated_request {
         $msg = GET($uri);
     }
     elsif ( $http_method eq 'POST' ) {
-        delete $args->{source}; # no necessary with OAuth requests
         my $encoded_args = { %$args };
-        $_ = encode('utf-8', $_) for values %$encoded_args;
-        $msg = POST($uri, $encoded_args);
+        _encode_args($encoded_args);
+        $msg = POST($uri, $args);
     }
     else {
         croak "unexpected http_method: $http_method";
@@ -298,7 +309,7 @@ sub _oauth_authenticated_request {
 sub _basic_authenticated_request {
     my ($self, $http_method, $uri, $args, $authenticate) = @_;
 
-    $_ = encode('utf-8', $_) for values %$args;
+    _encode_args($args);
 
     my $msg;
     if ( $http_method eq 'GET' ) {
