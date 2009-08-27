@@ -1,3 +1,6 @@
+0.08000 2009-08-27
+    - Ported get_authentication_url from Net::Twitter
+
 0.07000 2009-08-14
     - Removed JSON::DWIW as a handler (no support for JSON::Any's utf8 option)
 

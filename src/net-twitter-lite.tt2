@@ -34,9 +34,10 @@ sub new {
         useragent_class => 'LWP::UserAgent',
         useragent_args  => {},
         oauth_urls => {
-            request_token_url => "http://twitter.com/oauth/request_token",
-            authorization_url => "http://twitter.com/oauth/authorize",
-            access_token_url  => "http://twitter.com/oauth/access_token",
+            request_token_url  => "http://twitter.com/oauth/request_token",
+            authentication_url => "http://twitter.com/oauth/authenticate",
+            authorization_url  => "http://twitter.com/oauth/authorize",
+            access_token_url   => "http://twitter.com/oauth/access_token",
         },
         %args
     }, $class;
@@ -138,6 +139,7 @@ for my $method ( qw/
 # OAuth url accessors
 for my $method ( qw/
             request_token_url
+            authentication_url
             authorization_url
             access_token_url
         / ) {
@@ -150,16 +152,22 @@ for my $method ( qw/
     };
 }
 
-# get the authorization URL from Twitter
-sub get_authorization_url {
-    my ($self, %params) = @_;
+# get the athorization or authentication url
+sub _get_auth_url {
+    my ($self, $which_url, %params ) = @_;
 
     $self->_request_request_token(%params) unless $self->request_token;
-    
-    my $uri = $self->authorization_url;
+
+    my $uri = $self->$which_url;
     $uri->query_form(oauth_token => $self->request_token);
     return $uri;
 }
+
+# get the authentication URL from Twitter
+sub get_authentication_url { return shift->_get_auth_url(authentication_url => @_) }
+
+# get the authorization URL from Twitter
+sub get_authorization_url { return shift->_get_auth_url(authorization_url => @_) }
 
 # common portion of all oauth requests
 sub _make_oauth_request {
@@ -784,6 +792,13 @@ applications, pass your applications callback URL as the C<callback> parameter.
 No arguments are required for desktop applications (C<callback> defaults to
 C<oob>, out-of-band).
 
+=item get_authentication_url(callback => $callback_url)
+
+Get the URL used to authenticate the user with "Sign in with Twitter"
+authentication flow.  Returns a C<URI> object.  For web applications, pass your
+applications callback URL as the C<callback> parameter.  No arguments are
+required for desktop applications (C<callback> defaults to C<oob>, out-of-band).
+
 =item access_token
 
 Get or set the access token.
@@ -803,6 +818,10 @@ Get or set the request token secret.
 =item access_token_url
 
 Get or set the access_token URL.
+
+=item authentication_url
+
+Get or set the authentication URL.
 
 =item authorization_url
 

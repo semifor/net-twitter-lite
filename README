@@ -313,6 +313,13 @@ METHODS AND ARGUMENTS
         "callback" parameter. No arguments are required for desktop
         applications ("callback" defaults to "oob", out-of-band).
 
+    get_authentication_url(callback => $callback_url)
+        Get the URL used to authenticate the user with "Sign in with
+        Twitter" authentication flow. Returns a "URI" object. For web
+        applications, pass your applications callback URL as the "callback"
+        parameter. No arguments are required for desktop applications
+        ("callback" defaults to "oob", out-of-band).
+
     access_token
         Get or set the access token.
 
@@ -327,6 +334,9 @@ METHODS AND ARGUMENTS
 
     access_token_url
         Get or set the access_token URL.
+
+    authentication_url
+        Get or set the authentication URL.
 
     authorization_url
         Get or set the authorization URL.
