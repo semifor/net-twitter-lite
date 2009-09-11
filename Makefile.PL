@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-version '0.08000';
+version '0.08001';
 
 if ( $Module::Install::AUTHOR ) {
     eval "use Net::Twitter::Core";
@@ -26,6 +26,7 @@ requires    'Encode';
 
 # CPAN
 requires    'JSON::Any'      => '1.21';
+requires    'URI'            => 1.40;
 requires    'URI::Escape';
 requires    'LWP::UserAgent' => 2.032;
 
