@@ -17,7 +17,7 @@ SYNOPSIS
       eval {
           my $statuses = $nt->friends_timeline({ since_id => $high_water, count => 100 });
           for my $status ( @$statuses ) {
-              print "$status->{time} <$status->{user}{screen_name}> $status->{text}\n";
+              print "$status->{created_at} <$status->{user}{screen_name}> $status->{text}\n";
           }
       };
       warn "$@\n" if $@;

@@ -1,4 +1,6 @@
-0.08001
+    - Doc patch: created_at, not time (thanks to Blair Christensen RT#50313)
+
+0.08001 2009-09-10
     - URI 1.35 causes utf8 encoding problems; require 1.40 (thanks to Dan Boger, @zigdon)
     - Removed deprecated is_authorized from examples in pod (thanks to Nigel Metheringham)
 
