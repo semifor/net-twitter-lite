@@ -103,7 +103,7 @@ sub _oauth {
 
     return $self->{_oauth} ||= do {
         eval "use Net::OAuth 0.16";
-        croak "Install Net::OAuth for OAuth support" if $@;
+        croak "Install Net::OAuth 0.16 or later for OAuth support" if $@;
 
         eval '$Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A';
         die $@ if $@;

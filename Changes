@@ -1,3 +1,4 @@
+    - Improved error message when Net::OAuth is not install or version is inadequate
     - Changed nonce generation to remove dependency on Digest::SHA
     - Doc patch: created_at, not time (thanks to Blair Christensen RT#50313)
 
