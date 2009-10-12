@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.08001
+    This document describes Net::Twitter::Lite version 0.08002
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -242,7 +242,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.08001 (Perl)".
+            "Net::Twitter::Lite/0.08002 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -627,56 +627,97 @@ REST API Methods
 
     followers
 
-        Parameters: id, user_id, screen_name, page
+        Parameters: id, user_id, screen_name, cursor
         Required: *none*
 
-        Returns the authenticating user's followers, each with current
-        status inline. They are ordered by the order in which they joined
-        Twitter (this is going to be changed).
+        Returns a reference to an array of the user's followers. If "id",
+        "user_id", or "screen_name" is not specified, the followers of the
+        authenticating user are returned. The returned users are ordered
+        from most recently followed to least recently followed.
 
-        Returns 100 followers per page.
+        Use the optional "cursor" parameter to retrieve users in pages of
+        100. When the "cursor" parameter is used, the return value is a
+        reference to a hash with keys "previous_cursor", "next_cursor", and
+        "users". The value of "users" is a reference to an array of the
+        user's friends. The result set isn't guaranteed to be 100 every time
+        as suspended users will be filtered out. Set the optional "cursor"
+        parameter to -1 to get the first page of users. Set it to the prior
+        return's value of "previous_cursor" or "next_cursor" to page forward
+        or backwards. When there are no prior pages, the value of
+        "previous_cursor" will be 0. When there are no subsequent pages, the
+        value of "next_cursor" will be 0.
 
-        Returns: ArrayRef[BasicUser]
+        Returns: HashRef|ArrayRef[User]
 
     followers_ids
     followers_ids(id)
 
-        Parameters: id, user_id, screen_name, page
+        Parameters: id, user_id, screen_name, cursor
         Required: id
 
-        Returns an array of numeric IDs for every user is followed by.
+        Returns a reference to an array of numeric IDs for every user
+        following the specified user.
 
-        Returns: ArrayRef[Int]
+        Use the optional "cursor" parameter to retrieve IDs in pages of
+        5000. When the "cursor" parameter is used, the return value is a
+        reference to a hash with keys "previous_cursor", "next_cursor", and
+        "ids". The value of "ids" is a reference to an array of IDS of the
+        user's followers. Set the optional "cursor" parameter to -1 to get
+        the first page of IDs. Set it to the prior return's value of
+        "previous_cursor" or "next_cursor" to page forward or backwards.
+        When there are no prior pages, the value of "previous_cursor" will
+        be 0. When there are no subsequent pages, the value of "next_cursor"
+        will be 0.
+
+        Returns: HashRef|ArrayRef[Int]
 
     friends
     alias: following
 
-        Parameters: id, user_id, screen_name, page
+        Parameters: id, user_id, screen_name, cursor
         Required: *none*
 
-        Returns the authenticating user's friends, each with current status
-        inline. They are ordered by the order in which they were added as
-        friends. It's also possible to request another user's recent friends
-        list via the id parameter.
+        Returns a reference to an array of the user's friends. If "id",
+        "user_id", or "screen_name" is not specified, the friends of the
+        authenticating user are returned. The returned users are ordered
+        from most recently followed to least recently followed.
 
-        Returns 100 friends per page.
+        Use the optional "cursor" parameter to retrieve users in pages of
+        100. When the "cursor" parameter is used, the return value is a
+        reference to a hash with keys "previous_cursor", "next_cursor", and
+        "users". The value of "users" is a reference to an array of the
+        user's friends. The result set isn't guaranteed to be 100 every time
+        as suspended users will be filtered out. Set the optional "cursor"
+        parameter to -1 to get the first page of users. Set it to the prior
+        return's value of "previous_cursor" or "next_cursor" to page forward
+        or backwards. When there are no prior pages, the value of
+        "previous_cursor" will be 0. When there are no subsequent pages, the
+        value of "next_cursor" will be 0.
 
-        Returns: ArrayRef[BasicUser]
+        Returns: Hashref|ArrayRef[User]
 
     friends_ids
     friends_ids(id)
     alias: following_ids
 
-        Parameters: id, user_id, screen_name, page
+        Parameters: id, user_id, screen_name, cursor
         Required: id
 
-        Returns an array of numeric IDs for every user the specified user is
-        following.
+        Returns a reference to an array of numeric IDs for every user
+        followed the specified user.
 
-        Currently, Twitter returns IDs ordered from most recently followed
-        to least recently followed. This order may change at any time.
+        Use the optional "cursor" parameter to retrieve IDs in pages of
+        5000. When the "cursor" parameter is used, the return value is a
+        reference to a hash with keys "previous_cursor", "next_cursor", and
+        "ids". The value of "ids" is a reference to an array of IDS of the
+        user's friends. Set the optional "cursor" parameter to -1 to get the
+        first page of IDs. Set it to the prior return's value of
+        "previous_cursor" or "next_cursor" to page forward or backwards.
+        When there are no prior pages, the value of "previous_cursor" will
+        be 0. When there are no subsequent pages, the value of "next_cursor"
+        will be 0.
 
-        Returns: ArrayRef[Int]
+        Returns: HashRef|ArrayRef[Int]
 
     friends_timeline
     alias: following_timeline
@@ -815,6 +856,16 @@ REST API Methods
 
         Returns: ArrayRef[Status]
 
+    retweets
+    retweets(id)
+
+        Parameters: id, count
+        Required: id
+
+        Returns up to 100 of the first retweets of a given tweet.
+
+        Returns: Arrayref[Status]
+
     saved_searches
 
         Parameters: *none*
@@ -934,8 +985,10 @@ REST API Methods
         Parameters: image
         Required: image
 
-        Updates the authenticating user's profile background image. Expects
-        raw multipart data, not a URL to an image.
+        Updates the authenticating user's profile background image. The
+        "image" parameter must be an arrayref with the same interpretation
+        as the "image" parameter in the "update_profile_image" method. See
+        that method's documentation for details.
 
         Returns: ExtendedUser
 
@@ -958,8 +1011,22 @@ REST API Methods
         Parameters: image
         Required: image
 
-        Updates the authenticating user's profile image. Expects raw
-        multipart data, not a URL to an image.
+        Updates the authenticating user's profile image. The "image"
+        parameter is an arrayref with the following interpretation:
+
+          [ $file ]
+          [ $file, $filename ]
+          [ $file, $filename, Content_Type => $mime_type ]
+          [ undef, $filename, Content_Type => $mime_type, Content => $raw_image_data ]
+
+        The first value of the array ($file) is the name of a file to open.
+        The second value ($filename) is the name given to Twitter for the
+        file. If $filename is not provided, the basename portion of $file is
+        used. If $mime_type is not provided, it will be provided
+        automatically using LWP::MediaTypes::guess_media_type().
+
+        $raw_image_data can be provided, rather than opening a file, by
+        passing "undef" as the first array value.
 
         Returns: ExtendedUser
 

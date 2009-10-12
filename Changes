@@ -1,3 +1,6 @@
+0.08002 2009-10-12
+    - ported support for multipart/from-data posts, used by update_profile_image and
+      update_profile_background_image, from Net::Twitter
     - Improved error message when Net::OAuth is not install or version is inadequate
     - Changed nonce generation to remove dependency on Digest::SHA
     - Doc patch: created_at, not time (thanks to Blair Christensen RT#50313)

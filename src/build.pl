@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Net::Twitter::Core;
+use Net::Twitter;
 use Template;
 
 my ($version, $input, $output) = @ARGV;
@@ -19,15 +19,12 @@ $tt->process($input, {
 sub get_methods_for {
     my $api = shift;
 
-    my $class = "Net::Twitter::Role::API::$api";
-    eval "use $class";
-
-    my $method_map = $class->meta->get_method_map;
+    my $nt = Net::Twitter->new(traits => [ "API::$api" ]);
 
     return
         sort { $a->{name} cmp $b->{name} }
         grep { blessed $_ && $_->isa('Net::Twitter::Meta::Method') }
-        values %$method_map;
+             $nt->meta->get_all_methods;
 } 
 
 sub get_base_url_for {

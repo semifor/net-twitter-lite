@@ -47,6 +47,7 @@ multipart
 netrc
 ok
 requester's
+return's
 retweet
 retweeted
 retweeting
