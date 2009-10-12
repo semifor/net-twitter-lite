@@ -11,7 +11,6 @@ use URI::Escape;
 use JSON::Any qw/XS JSON/;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
-use Digest::SHA;
 use Encode qw/encode_utf8/;
 
 my $json_handler = JSON::Any->new(utf8 => 1);
@@ -180,7 +179,7 @@ sub _make_oauth_request {
         request_method   => 'GET',
         signature_method => 'HMAC-SHA1',
         timestamp        => time,
-        nonce            => Digest::SHA::sha1_base64(time . $$ . rand),
+        nonce            => time ^ $$ ^ int(rand 2**32),
         %params,
     );
 
