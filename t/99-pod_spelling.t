@@ -54,6 +54,7 @@ retweeting
 Retweets
 retweets
 rpp
+spammer
 SSL
 ssl
 stringifies
