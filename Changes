@@ -1,3 +1,5 @@
+    - Added better runtime error message when SSL support is missing
+
 0.08003 2009-10-13
     - Added new API method: report_spam
 

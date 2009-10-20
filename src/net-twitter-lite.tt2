@@ -19,6 +19,11 @@ sub new {
     my ($class, %args) = @_;
 
     my $ssl   = delete $args{ssl};
+    if ( $ssl ) {
+        eval { require Crypt::SSLeay } && $Crypt::SSLeay::VERSION >= 0.5
+            || croak "Crypt::SSLeay version 0.50 is required for SSL support";
+    }
+
     my $netrc = delete $args{netrc};
     my $new = bless {
         apiurl     => 'http://twitter.com',
