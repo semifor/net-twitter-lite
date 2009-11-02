@@ -1,3 +1,6 @@
+0.08005 2009-11-02
+    - Return user_id and screen_name from request_access token (ported from Net::Twitter)
+
 0.08004 2009-10-22
     - Fixed: cached request_token resulted in stale authentication/autorization urls
     - Added better runtime error message when SSL support is missing
