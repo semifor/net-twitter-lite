@@ -1,3 +1,12 @@
+0.08006 2009-12-15
+    - Ported from Net::Twitter:
+      - netrc/netrc_machine changes from Net::Twitter
+      - trends_available/trends_location API methods
+      - documented lat/long parameters to update
+      - added users_search/find_people API method
+      - updated apiurl default to http://api.twitter.com/1
+    - Fixed: retweeted_{to,of}_me API URLs (RT#52784)
+
 0.08005 2009-11-02
     - Return user_id and screen_name from request_access token (ported from Net::Twitter)
 

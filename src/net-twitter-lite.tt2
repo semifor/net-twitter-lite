@@ -26,7 +26,7 @@ sub new {
 
     my $netrc = delete $args{netrc};
     my $new = bless {
-        apiurl     => 'http://twitter.com',
+        apiurl     => 'http://api.twitter.com/1',
         apirealm   => 'Twitter API',
         $args{identica} ? ( apiurl => 'http://identi.ca/api' ) : (),
         searchurl  => 'http://search.twitter.com',
@@ -43,6 +43,7 @@ sub new {
             authorization_url  => "http://twitter.com/oauth/authorize",
             access_token_url   => "http://twitter.com/oauth/access_token",
         },
+        netrc_machine => 'api.twitter.com',
         %args
     }, $class;
 
@@ -53,7 +54,7 @@ sub new {
         eval { require Net::Netrc; 1 }
             || croak "Net::Netrc is required for the netrc option";
 
-        my $host = URI->new($new->{apiurl})->host;
+        my $host = $netrc eq '1' ? $new->{netrc_machine} : $netrc;
         my $nrc = Net::Netrc->lookup($host)
             || croak "No .netrc entry for $host";
 
@@ -508,6 +509,18 @@ You should consider upgrading to C<Net::Twitter> for additional functionality,
 finer grained control over features, full backwards compatibility with older
 versions of C<Net::Twitter>, and additional error handling options.
 
+=head1 CLIENT CODE CHANGES REQUIRED
+
+The default C<apiurl> changed in version 0.08006.  The change should be
+transparent to client code, unless you're using the C<netrc> option.  If so,
+you'll need to either update the C<.netrc> entry and change the C<machine>
+value from C<twitter.com> to C<api.twitter.com>, or set either the C<netrc>
+or C<netrc_machine> options to C<twitter.com>.
+
+    $nt = Net::Twitter::Lite->new(netrc_machine => 'twitter.com', netrc => 1);
+    # -or-
+    $nt = Net::Twitter::Lite->new(netrc => 'twitter.com');
+
 =head1 IMPORTANT
 
 Beginning with version 0.03, it is necessary for web applications using OAuth
@@ -769,16 +782,26 @@ If set to 1, an SSL connection will be used for all API calls. Defaults to 0.
 
 =item netrc
 
-If set to 1, Net::Twitter::Lite will look up the host portion of the C<apiurl>
-in the C<.netrc> file to obtain the uC<username> and C<password> arguments.
+(Optional) Sets the I<machine> key to look up in C<.netrc> to obtain
+credentials. If set to 1, Net::Twitter::Lite will use the value of the C<netrc_machine>
+option (below).
 
    # in .netrc
-   machine twitter.com
-   login YOUR_TWITTER_USER_NAME
-   password YOUR_TWITTER_PASSWORD
+   machine api.twitter.com
+     login YOUR_TWITTER_USER_NAME
+     password YOUR_TWITTER_PASSWORD
+   machine semifor.twitter.com
+     login semifor
+     password SUPERSECRET
 
    # in your perl program
    $nt = Net::Twitter::Lite->new(netrc => 1);
+   $nt = Net::Twitter::Lite->new(netrc => 'semifor.twitter.com');
+
+=item netrc_machine
+
+(Optional) Sets the C<machine> entry to look up in C<.netrc> when C<<netrc => 1>>
+is used.  Defaults to C<api.twitter.com>.
 
 =back
 

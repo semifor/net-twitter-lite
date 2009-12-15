@@ -111,8 +111,10 @@ for my $test ( @tests ) {
     ok $nt->$api_call(@$args),         "$api_call call";
     my $req = $http_response->request;
 
+    (my $path_part = $req->uri->path) =~ s{^/1}{};
+
     is_deeply input_args($req), \%args,   " $api_call args";
-    is $req->uri->path,         $path,    " $api_call path";
+    is $path_part,              $path,    " $api_call path";
     is $req->method,            $method,  " $api_call method";
 }
 
