@@ -42,6 +42,7 @@ sub new {
             authentication_url => "http://twitter.com/oauth/authenticate",
             authorization_url  => "http://twitter.com/oauth/authorize",
             access_token_url   => "http://twitter.com/oauth/access_token",
+            xauth_url          => "https://twitter.com/oauth/access_token",
         },
         netrc_machine => 'api.twitter.com',
         %args
@@ -108,8 +109,8 @@ sub _oauth {
     my $self = shift;
 
     return $self->{_oauth} ||= do {
-        eval "use Net::OAuth 0.16";
-        croak "Install Net::OAuth 0.16 or later for OAuth support" if $@;
+        eval "use Net::OAuth 0.25";
+        croak "Install Net::OAuth 0.25 or later for OAuth support" if $@;
 
         eval '$Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A';
         die $@ if $@;
@@ -147,6 +148,7 @@ for my $method ( qw/
             authentication_url
             authorization_url
             access_token_url
+            xauth_url
         / ) {
     no strict 'refs';
     *{__PACKAGE__ . "::$method"} = sub {
@@ -238,6 +240,35 @@ sub request_access_token {
     # discard request tokens, they're no longer valid
     delete $self->{request_token};
     delete $self->{request_token_secret};
+
+    # reuse $uri to extract parameters from content
+    $uri->query($res->content);
+    my %res_param = $uri->query_form;
+
+    return (
+        $self->access_token($res_param{oauth_token}),
+        $self->access_token_secret($res_param{oauth_token_secret}),
+        $res_param{user_id},
+        $res_param{screen_name},
+    );
+}
+
+# exchange username and password for access tokens
+sub xauth {
+    my ( $self, $username, $password ) = @_;
+
+    my $uri = $self->xauth_url;
+    my $request = $self->_make_oauth_request(
+        'XauthAccessToken',
+        request_url     => $uri,
+        x_auth_username => $username,
+        x_auth_password => $password,
+        x_auth_mode     => 'client_auth',
+    );
+
+    my $res = $self->{ua}->get($request->to_url);
+    die "GET $uri failed: ".$res->status_line
+        unless $res->is_success;
 
     # reuse $uri to extract parameters from content
     $uri->query($res->content);
@@ -724,6 +755,7 @@ A HASH ref of URLs to be used with OAuth authentication. Defaults to:
       request_token_url => "http://twitter.com/oauth/request_token",
       authorization_url => "http://twitter.com/oauth/authorize",
       access_token_url  => "http://twitter.com/oauth/access_token",
+      xauth_url         => "https://twitter.com/oauth/access_token",
   }
 
 =item clientname
@@ -858,6 +890,13 @@ authentication flow.  Returns a C<URI> object.  For web applications, pass your
 applications callback URL as the C<callback> parameter.  No arguments are
 required for desktop applications (C<callback> defaults to C<oob>, out-of-band).
 
+=item xauth($username, $password)
+
+Exchanges a username and password for OAuth tokens. Your application must be
+approved for XAuth access by Twitter for this method to work.  Twitter does not
+grant XAuth access for web applications except for a brief period of time to
+allow them to switch form Basic authentication to OAuth authentication.
+
 =item access_token
 
 Get or set the access token.
@@ -889,6 +928,10 @@ Get or set the authorization URL.
 =item request_token_url
 
 Get or set the request_token URL.
+
+=item xauth_url
+
+Get or set the XAuth access token request URL.
 
 =back
 

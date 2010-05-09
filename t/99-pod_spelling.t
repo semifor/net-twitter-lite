@@ -29,6 +29,8 @@ favorited
 friended
 geo
 geocode
+GPS
+granularities
 Identica
 identica
 IM
@@ -67,5 +69,8 @@ unfollow
 url
 useragent
 username
+WiFi
 WOEID
 woeid
+XAuth
+xauth

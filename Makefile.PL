@@ -31,7 +31,7 @@ requires    'LWP::UserAgent' => 2.032;
 
 feature 'OAuth Authentication',
     -default     => 1,
-    'Net::OAuth' => '0.16',
+    'Net::OAuth' => '0.25',
     ;
 
 feature '.netrc support',
