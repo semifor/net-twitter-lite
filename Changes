@@ -1,3 +1,4 @@
+    - Fixed: Net::Twitter::Lite::Error - needed overload fallback => 1
     - Fixed: utf8 encoding error for latin1 using Basic Authentication (ported from Net::Twitter)
 
 0.08006 2009-12-15

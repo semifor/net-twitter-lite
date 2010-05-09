@@ -2,7 +2,8 @@ package Net::Twitter::Lite::Error;
 use warnings;
 use strict;
 
-use overload '""' => \&error;
+use overload '""' => \&error,
+             'fallback' => 1;
 
 # This is basically a duplicate of Net::Twitter::Lite::Error, only without Moose.  I
 # considered creating a new Net-Twitter-Error distribution so that it could be
