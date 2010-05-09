@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.08006
+    This document describes Net::Twitter::Lite version 0.09000
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -254,7 +254,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.08006 (Perl)".
+            "Net::Twitter::Lite/0.09000 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -752,7 +752,7 @@ REST API Methods
     friends_timeline
     alias: following_timeline
 
-        Parameters: since_id, max_id, count, page
+        Parameters: since_id, max_id, count, page, skip_user
         Required: *none*
 
         Returns the 20 most recent statuses posted by the authenticating
@@ -774,6 +774,30 @@ REST API Methods
 
         Returns: Bool
 
+    friendships_incoming
+    friendships_incoming(cursor)
+
+        Parameters: cursor
+        Required: cursor
+
+        Returns an HASH ref with an array of numeric IDs in the "ids"
+        element for every user who has a pending request to follow the
+        authenticating user.
+
+        Returns: HashRef
+
+    friendships_outgoing
+    friendships_outgoing(cursor)
+
+        Parameters: cursor
+        Required: cursor
+
+        Returns an HASH ref with an array of numeric IDs in the "ids"
+        element for every protected user for whom the authenticating user
+        has a pending follow request.
+
+        Returns: HashRef
+
     geo_id
     geo_id(id)
 
@@ -787,7 +811,7 @@ REST API Methods
 
     home_timeline
 
-        Parameters: since_id, max_id, count, page
+        Parameters: since_id, max_id, count, page, skip_user
         Required: *none*
 
         Returns the 20 most recent statuses, including retweets, posted by
@@ -822,8 +846,9 @@ REST API Methods
         Returns: DirectMessage
 
     public_timeline
+    public_timeline(skip_user)
 
-        Parameters: *none*
+        Parameters: skip_user
         Required: *none*
 
         Returns the 20 most recent statuses from non-protected users who
@@ -877,6 +902,27 @@ REST API Methods
         embedded.
 
         Returns: Status
+
+    retweeted_by
+    retweeted_by(id)
+
+        Parameters: id, count, page
+        Required: id
+
+        Returns up to 100 users who retweeted the status identified by "id".
+
+        Returns: ArrayRef[User]
+
+    retweeted_by_ids
+    retweeted_by_ids(id)
+
+        Parameters: id, count, page
+        Required: id
+
+        Returns the IDs of up to 100 users who retweeted the status
+        identified by "id".
+
+        Returns: ArrayRef[User]
 
     retweeted_by_me
 
@@ -1210,7 +1256,8 @@ REST API Methods
 
     user_timeline
 
-        Parameters: id, user_id, screen_name, since_id, max_id, count, page
+        Parameters: id, user_id, screen_name, since_id, max_id, count, page,
+        skip_user
         Required: *none*
 
         Returns the 20 most recent statuses posted from the authenticating

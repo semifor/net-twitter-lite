@@ -1,3 +1,8 @@
+0.09000 2010-05-09
+    - New API methods (from Net::Twitter): friendships_incoming,
+      friendships_outgoing, geo_id, retweeted_by, retweeted_by_ids,
+      reverse_geocode.
+    - Added XAuth support (method xauth)
     - Fixed: Net::Twitter::Lite::Error - needed overload fallback => 1
     - Fixed: utf8 encoding error for latin1 using Basic Authentication (ported from Net::Twitter)
 
