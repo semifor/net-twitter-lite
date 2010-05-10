@@ -1,3 +1,7 @@
+0.09001 2010-05-10
+    - removed Try::Tiny from unicode test to avoid an additional dependency
+    - Fixed unicode test, aburch (Ansgar Burchardt)
+
 0.09000 2010-05-09
     - New API methods (from Net::Twitter): friendships_incoming,
       friendships_outgoing, geo_id, retweeted_by, retweeted_by_ids,

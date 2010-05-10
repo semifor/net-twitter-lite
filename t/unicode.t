@@ -1,7 +1,6 @@
 #!perl
 use warnings;
 use strict;
-use Try::Tiny;
 use Test::More tests => 9;
 use Encode qw/decode encode_utf8 decode_utf8/;
 use Net::Twitter::Lite;
@@ -38,7 +37,7 @@ my $status = "\x{4E16}\x{754C}\x{60A8}\x{597D}\x{FF01}";
 
 ok utf8::is_utf8($status), 'status parameter is decoded';
 
-try { $nt->update($status) };
+eval { $nt->update($status) };
 
 is sent_status(), $status, 'sent status matches update parameter';
 
@@ -46,7 +45,7 @@ is sent_status(), $status, 'sent status matches update parameter';
 my $latin1 = "\xabHello, world\xbb";
 
 ok !utf8::is_utf8($latin1), "latin-1 string is not utf8 internally";
-try { $nt->update($latin1) };
+eval { $nt->update($latin1) };
 is sent_status(), $latin1, "latin-1 matches";
 ok !utf8::is_utf8($latin1), "latin-1 not promoted to utf8";
 
@@ -58,7 +57,7 @@ SKIP: {
     eval "use Encode::DoubleEncodedUTF8";
     skip "requires Encode::DoubleEncodedUTF8", 2 if $@;
 
-    try { $nt->update(encode_utf8 $status) };
+    eval { $nt->update(encode_utf8 $status) };
 
     my $bytes = raw_sent_status();
 
@@ -76,8 +75,8 @@ $nt = Net::Twitter::Lite->new(
     ua       => $ua,
 );
 
-try { $nt->update($status) };
+eval { $nt->update($status) };
 is sent_status(), $status, 'basic auth';
 
-try { $nt->update($latin1) };
+eval { $nt->update($latin1) };
 is sent_status(), $latin1, 'latin-1 basic auth';
