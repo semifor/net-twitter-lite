@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-version '0.09001';
+version '0.09002_02';
 
 if ( $Module::Install::AUTHOR ) {
     eval "use Net::Twitter::Core";

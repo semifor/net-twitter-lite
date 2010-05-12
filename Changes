@@ -1,3 +1,7 @@
+0.9002_02 2010-05-12
+    - ported from Net::Twitter 3.13002_02
+    - Added Lists API support
+
 0.09001 2010-05-10
     - removed Try::Tiny from unicode test to avoid an additional dependency
     - Fixed unicode test, aburch (Ansgar Burchardt)

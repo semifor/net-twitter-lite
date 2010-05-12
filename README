@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    This document describes Net::Twitter::Lite version 0.09001
+    This document describes Net::Twitter::Lite version 0.09002_02
 
 SYNOPSIS
       use Net::Twitter::Lite;
@@ -254,7 +254,7 @@ METHODS AND ARGUMENTS
 
         useragent
             The value for "User-Agent" HTTP header. It defaults to
-            "Net::Twitter::Lite/0.09001 (Perl)".
+            "Net::Twitter::Lite/0.09002_02 (Perl)".
 
         source
             The value used in the "source" parameter of API method calls. It
@@ -820,6 +820,34 @@ REST API Methods
 
         Returns: ArrayRef[Status]
 
+    lookup_users
+
+        Parameters: user_id, screen_name
+        Required: *none*
+
+        Return up to 20 users worth of extended information, specified by
+        either ID, screen name, or combination of the two. The author's most
+        recent status (if the authenticating user has permission) will be
+        returned inline. This method is rate limited to 1000 calls per hour.
+
+        This method will accept user IDs or screen names as either a comma
+        delimited string, or as an ARRAY ref. It will also accept arguments
+        in the normal HASHREF form or as a simple list of named arguments.
+        I.e., any of the following forms are acceptable:
+
+            $nt->lookup_users({ user_id => '1234,6543,3333' });
+            $nt->lookup_users(user_id => '1234,6543,3333');
+            $nt->lookup_users({ user_id => [ 1234, 6543, 3333 ] });
+            $nt->lookup_users({ screen_name => 'fred,barney,wilma' });
+            $nt->lookup_users(screen_name => ['fred', 'barney', 'wilma']);
+
+            $nt->lookup_users(
+                screen_name => ['fred', 'barney' ],
+                user_id     => '4321,6789',
+            );
+
+        Returns: ArrayRef[User]
+
     mentions
     alias: replies
 
@@ -1354,6 +1382,203 @@ Search API Methods
         Required: *none*
 
         Returns the top 30 trending topics for each day in a given week.
+
+        Returns: HashRef
+
+Lists API Methods
+    add_list_member
+    add_list_member(user, list_id, id)
+
+        Parameters: user, list_id, id
+        Required: user, list_id, id
+
+        Adds the user identified by "id" to the list.
+
+        Returns a reference the added user as a hash reference.
+
+        Returns: User
+
+    create_list
+    create_list(user, name)
+
+        Parameters: user, name, mode, description
+        Required: user, name
+
+        Creates a new list for the authenticated user. The "mode" parameter
+        may be either "public" or "private". If not specified, it defaults
+        to "public".
+
+        Returns: HashRef
+
+    delete_list
+    delete_list(user, list_id)
+
+        Parameters: user, list_id
+        Required: user, list_id
+
+        Deletes a list owned by the authenticating user. Returns the list as
+        a hash reference.
+
+        Returns:
+
+    delete_list_member
+    delete_list_member(user, list_id, id)
+    alias: remove_list_member
+
+        Parameters: user, list_id, id
+        Required: user, list_id, id
+
+        Deletes the user identified by "id" from the specified list.
+
+        Returns the deleted user as a hash reference.
+
+        Returns:
+
+    get_list
+    get_list(user, list_id)
+
+        Parameters: user, list_id
+        Required: user, list_id
+
+        Returns the specified list as a hash reference.
+
+        Returns: HashRef
+
+    get_lists
+    get_lists(user)
+    alias: list_lists
+
+        Parameters: user, cursor
+        Required: user
+
+        Returns a reference to an array of lists owned by the specified
+        user. If the user is the authenticated user, it returns both public
+        and private lists. Otherwise, it only returns public lists.
+
+        When the "cursor" parameter is used, a hash reference is returned;
+        the lists are returned in the "lists" element of the hash.
+
+        Returns: ArrayRef[List]
+
+    is_list_member
+    is_list_member(user, list_id, id)
+
+        Parameters: user, list_id, id
+        Required: user, list_id, id
+
+        Returns the list member as a HASH reference if "id" is a member of
+        the list. Otherwise, returns undef.
+
+        Returns: ArrayRef[User]
+
+    is_list_subscriber
+    is_list_subscriber(user, list_id, id)
+    alias: is_subscribed_list
+
+        Parameters: user, list_id, id
+        Required: user, list_id, id
+
+        Returns the subscriber as a HASH reference if "id" is a subscriber
+        to the list. Otherwise, returns undef.
+
+        Returns: ArrayRef[User]
+
+    list_members
+    list_members(user, list_id)
+
+        Parameters: user, list_id, id, cursor
+        Required: user, list_id
+
+        Returns the list members as an array reference.
+
+        The optional "id" parameter can be used to determine if the user
+        specified by "id" is a member of the list. If so, the user is
+        returned as a hash reference; if not, "undef" is returned.
+
+        When the "cursor" parameter is used, a hash reference is returned;
+        the members are returned in the "users" element of the hash.
+
+        Returns: ArrayRef[User]
+
+    list_memberships
+    list_memberships(user)
+
+        Parameters: user, cursor
+        Required: user
+
+        Returns the lists the specified user is a member of as an array
+        reference.
+
+        When the "cursor" parameter is used, a hash reference is returned;
+        the lists are returned in the "lists" element of the hash.
+
+        Returns:
+
+    list_statuses
+    list_statuses(user, list_id)
+
+        Parameters: user, list_id, since_id, max_id, per_page, page
+        Required: user, list_id
+
+        Returns a timeline of list member statuses as an array reference.
+
+        Returns: ArrayRef[Status]
+
+    list_subscribers
+    list_subscribers(user, list_id)
+
+        Parameters: user, list_id, id, cursor
+        Required: user, list_id
+
+        Returns the subscribers to a list as an array reference.
+
+        When the "cursor" parameter is used, a hash reference is returned;
+        the subscribers are returned in the "users" element of the hash.
+
+        Returns: ArrayRef[User]
+
+    list_subscriptions
+    list_subscriptions(user)
+
+        Parameters: user, cursor
+        Required: user
+
+        Returns a lists to which the specified user is subscribed as an
+        array reference.
+
+        When the "cursor" parameter is used, a hash reference is returned;
+        the lists are returned in the "lists" element of the hash.
+
+        Returns:
+
+    subscribe_list
+    subscribe_list(user, list_id)
+
+        Parameters: user, list_id
+        Required: user, list_id
+
+        Subscribes the authenticated user to the specified list.
+
+        Returns: List
+
+    unsubscribe_list
+    unsubscribe_list(user, list_id)
+
+        Parameters: user, list_id
+        Required: user, list_id
+
+        Unsubscribes the authenticated user from the specified list.
+
+        Returns: List
+
+    update_list
+    update_list(user, list_id)
+
+        Parameters: user, list_id, name, mode, description
+        Required: user, list_id
+
+        Updates a list to change the name, mode, description, or any
+        combination thereof.
 
         Returns: HashRef
 

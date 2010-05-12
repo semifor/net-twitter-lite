@@ -18,18 +18,14 @@ my $json_handler = JSON::Any->new(utf8 => 1);
 sub new {
     my ($class, %args) = @_;
 
-    my $ssl   = delete $args{ssl};
-    if ( $ssl ) {
-        eval { require Crypt::SSLeay } && $Crypt::SSLeay::VERSION >= 0.5
-            || croak "Crypt::SSLeay version 0.50 is required for SSL support";
-    }
-
     my $netrc = delete $args{netrc};
     my $new = bless {
-        apiurl     => 'http://api.twitter.com/1',
+        apiurl                => 'http://api.twitter.com/1',
+        searchapiurl          => 'http://search.twitter.com',
+        search_trends_api_url => 'http://api.twitter.com/1',
+        lists_api_url         => 'http://api.twitter.com/1',
         apirealm   => 'Twitter API',
         $args{identica} ? ( apiurl => 'http://identi.ca/api' ) : (),
-        searchurl  => 'http://search.twitter.com',
         useragent  => __PACKAGE__ . "/$VERSION (Perl)",
         clientname => __PACKAGE__,
         clientver  => $VERSION,
@@ -48,7 +44,14 @@ sub new {
         %args
     }, $class;
 
-    $new->{apiurl} =~ s/http/https/ if $ssl;
+
+    if ( delete $args{ssl} ) {
+        eval { require Crypt::SSLeay } && $Crypt::SSLeay::VERSION >= 0.5
+            || croak "Crypt::SSLeay version 0.50 is required for SSL support";
+
+        $new->{$_} =~ s/http/https/
+            for qw/apiurl searchurl search_trends_api_url lists_api_url/;
+    }
 
     # get username and password from .netrc
     if ( $netrc ) {
@@ -114,7 +117,7 @@ sub _oauth {
 
         eval '$Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A';
         die $@ if $@;
-        
+
         'Net::OAuth';
     };
 }
@@ -136,7 +139,7 @@ for my $method ( qw/
     no strict 'refs';
     *{__PACKAGE__ . "::$method"} = sub {
         my $self = shift;
-        
+
         $self->{$method} = shift if @_;
         return $self->{$method};
     };
@@ -302,7 +305,7 @@ sub _encode_args {
 
 sub _oauth_authenticated_request {
     my ($self, $http_method, $uri, $args, $authenticate) = @_;
-    
+
     delete $args->{source}; # not necessary with OAuth requests
 
     my $is_multipart = grep { ref } %$args;
@@ -384,8 +387,10 @@ sub _mk_post_msg {
          : POST($uri, $args);
 }
 
+{ ### scope $api_def
+
 my $api_def = [
-[% FOREACH api IN [ 'REST', 'Search' ] -%]
+[% FOREACH api IN [ 'REST', 'Search', 'Lists' ] -%]
     [ [% api %] => [
 [% FOREACH method IN get_methods_for(api) -%]
         [ '[% method.name %]', {
@@ -398,6 +403,7 @@ my $api_def = [
             deprecated  => [% method.deprecated %],
             authenticate => [% method.authenticate %],
             booleans    => [ qw/[% method.booleans.join(' ') %]/ ],
+        base_url_method => '[% method.base_url_method %]',
         } ],
 [% END -%]
     ] ],
@@ -421,10 +427,6 @@ while ( @$api_def ) {
     my $api_name = shift @$api;
     my $methods = shift @$api;
 
-    my $url_attr = $api_name eq 'REST' ? 'apiurl' : 'searchurl';
-
-    my $base_url = sub { shift->{$url_attr} };
-
     for my $method ( @$methods ) {
         my $name    = shift @$method;
         my %options = %{ shift @$method };
@@ -440,10 +442,17 @@ while ( @$api_def ) {
             # copy callers args since we may add ->{source}
             my $args = ref $_[-1] eq 'HASH' ? { %{pop @_} } : {};
 
-            if ( @_ ) {
-                @_ == @$arg_names || croak "$name expected @{[ scalar @$arg_names ]} args";
-                @{$args}{@$arg_names} = @_;
+            croak sprintf "$name expected %d args", scalar @$arg_names if @_ > @$arg_names;
+
+            # promote positional args to named args
+            for ( my $i = 0; @_; ++$i ) {
+                my $param = $arg_names->[$i];
+                croak "duplicate param $param: both positional and named"
+                    if exists $args->{$param};
+
+                $args->{$param} = shift;
             }
+
             $args->{source} ||= $self->{source} if $options{add_source};
 
             my $authenticate = exists $args->{authenticate}  ? delete $args->{authenticate}
@@ -466,7 +475,7 @@ while ( @$api_def ) {
             $local_path =~ s,/:id$,, unless exists $args->{id}; # remove optional trailing id
             $local_path =~ s/:(\w+)/delete $args->{$1} or croak "required arg '$1' missing"/eg;
 
-            my $uri = URI->new($base_url->($self) . "/$local_path.json");
+            my $uri = URI->new($self->{$options{base_url_method}} . "/$local_path.json");
 
             return $self->_parse_result(
                 $self->_authenticated_request($options{method}, $uri, $args, $authenticate)
@@ -477,6 +486,53 @@ while ( @$api_def ) {
         *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
     }
 }
+$DB::single = 1;
+
+# catch expected error and promote it to an undef
+for ( qw/list_members is_list_member list_subscribers is_list_subscriber/ ) {
+    my $orig = __PACKAGE__->can($_) or die;
+
+    my $code = sub {
+        my $r = eval { $orig->(@_) };
+        if ( $@ ) {
+            return if $@ =~ /The specified user is not a (?:memb|subscrib)er of this list/;
+
+            die $@;
+        }
+
+        return $r;
+    };
+
+    no strict 'refs';
+    no warnings 'redefine';
+    *{__PACKAGE__ . "::$_"} = $code;
+}
+
+# special case parameter handling for lookup_users
+for ( qw/lookup_users/ ) {
+    my $orig = __PACKAGE__->can($_) or die;
+
+    my $code = sub {
+        my $self = shift;
+
+        my $args = ref $_[-1] eq 'HASH' ? pop @_ : {};
+        $args = { %$args, @_ };
+
+        for ( qw/screen_name user_id/ ) {
+            $args->{$_} = join(',' => @{ $args->{$_} }) if ref $args->{$_} eq 'ARRAY';
+        }
+
+        return $orig->($self, $args);
+    };
+
+    no strict 'refs';
+    no warnings 'redefine';
+    *{__PACKAGE__ . "::$_"} = $code;
+}
+
+
+
+} ### end scope for $api_def
 
 sub _from_json {
     my ($self, $json) = @_;
@@ -1033,6 +1089,10 @@ also parameters, using any one of them satisfies the requirement.
 =head1 Search API Methods
 
 [% INCLUDE APIDOC class='Search' %]
+
+=head1 Lists API Methods
+
+[% INCLUDE APIDOC class='Lists' %]
 
 =head1 ERROR HANDLING
 
