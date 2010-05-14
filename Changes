@@ -1,3 +1,7 @@
+0.9002_03 2010-05-13
+    - ported from Net::Twitter 3.13002_03
+    - handle DELETE HTTP method (for Lists API)
+
 0.9002_02 2010-05-12
     - ported from Net::Twitter 3.13002_02
     - Added Lists API support
