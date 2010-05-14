@@ -2,17 +2,17 @@
 use warnings;
 use strict;
 use Test::More;
-use Net::Twitter;
+use Net::Twitter::Lite;
 
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
 
-my $nt = Net::Twitter->new(traits => [qw/API::Lists/], username => 'fred', password => 'secret');
+my $nt = Net::Twitter::Lite->new(username => 'fred', password => 'secret');
 
 my $req;
 my $res = HTTP::Response->new(200);
 $res->content('{"response":"done"}');
-$nt->ua->add_handler(request_send => sub { $req = shift; return $res });
+$nt->{ua}->add_handler(request_send => sub { $req = shift; return $res });
 
 my @tests = (
     create_list => {

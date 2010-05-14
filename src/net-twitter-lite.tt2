@@ -363,12 +363,15 @@ sub _basic_authenticated_request {
     _encode_args($args);
 
     my $msg;
-    if ( $http_method eq 'GET' ) {
+    if ( $http_method =~ /^(?:GET|DELETE)$/ ) {
         $uri->query_form($args);
-        $msg = GET($uri);
+        $msg = HTTP::Request->new($http_method, $uri);
     }
     elsif ( $http_method eq 'POST' ) {
         $msg = $self->_mk_post_msg($uri, $args);
+    }
+    else {
+        croak "unexpected HTTP method: $http_method";
     }
 
     if ( $authenticate && $self->{username} && $self->{password} ) {
