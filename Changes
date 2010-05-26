@@ -1,3 +1,6 @@
+0.10001 2010-05-26
+    - fixed "plan twice" error in unicode test
+
 0.10000 2010-05-21
     - production release, ported from Net::Twitter 3.13003
 
