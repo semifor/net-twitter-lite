@@ -1,12 +1,14 @@
 #!perl
 use warnings;
 use strict;
-use Test::More tests => 9;
+use Test::More;
 use Encode qw/decode encode_utf8 decode_utf8/;
 use Net::Twitter::Lite;
 
 eval "use LWP::UserAgent 5.819";
 plan skip_all => 'LWP::UserAgent >= 5.819 required' if $@;
+
+plan tests => 9;
 
 my $req;
 my $ua = LWP::UserAgent->new;
