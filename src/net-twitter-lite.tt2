@@ -49,8 +49,8 @@ sub new {
         eval { require Crypt::SSLeay } && $Crypt::SSLeay::VERSION >= 0.5
             || croak "Crypt::SSLeay version 0.50 is required for SSL support";
 
-        $new->{$_} =~ s/http/https/
-            for qw/apiurl searchurl search_trends_api_url lists_api_url/;
+        $new->{$_} =~ s/^http:/https:/
+            for qw/apiurl searchapiurl search_trends_api_url lists_api_url/;
     }
 
     # get username and password from .netrc
@@ -489,7 +489,6 @@ while ( @$api_def ) {
         *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
     }
 }
-$DB::single = 1;
 
 # catch expected error and promote it to an undef
 for ( qw/list_members is_list_member list_subscribers is_list_subscriber/ ) {
