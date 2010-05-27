@@ -1,3 +1,6 @@
+0.10003 2010-05-27
+    - fixed ssl test: skip_all if Crypt::SSLeay is not available
+
 0.10002 2010-05-27
     - fixed: set correct url to https when ssl is specified RT#57889
 
