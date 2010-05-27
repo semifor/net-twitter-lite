@@ -1,5 +1,5 @@
 0.10002 2010-05-27
-    - fixed: set correct url to https when ssl is specified
+    - fixed: set correct url to https when ssl is specified RT#57889
 
 0.10001 2010-05-26
     - fixed "plan twice" error in unicode test
