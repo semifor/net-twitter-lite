@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-version '0.10003';
+version '0.10004';
 
 if ( $Module::Install::AUTHOR ) {
     eval "use Net::Twitter::Core";
@@ -28,6 +28,7 @@ requires    'JSON::Any'      => '1.21';
 requires    'URI'            => 1.40;
 requires    'URI::Escape';
 requires    'LWP::UserAgent' => 2.032;
+requires    'Crypt::SSLeay'  => 0.5;
 
 feature 'OAuth Authentication',
     -default     => 1,

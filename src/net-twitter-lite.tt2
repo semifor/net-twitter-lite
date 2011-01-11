@@ -34,10 +34,10 @@ sub new {
         useragent_class => 'LWP::UserAgent',
         useragent_args  => {},
         oauth_urls => {
-            request_token_url  => "http://twitter.com/oauth/request_token",
-            authentication_url => "http://twitter.com/oauth/authenticate",
-            authorization_url  => "http://twitter.com/oauth/authorize",
-            access_token_url   => "http://twitter.com/oauth/access_token",
+            request_token_url  => "https://twitter.com/oauth/request_token",
+            authentication_url => "https://twitter.com/oauth/authenticate",
+            authorization_url  => "https://twitter.com/oauth/authorize",
+            access_token_url   => "https://twitter.com/oauth/access_token",
             xauth_url          => "https://twitter.com/oauth/access_token",
         },
         netrc_machine => 'api.twitter.com',
@@ -46,9 +46,6 @@ sub new {
 
 
     if ( delete $args{ssl} ) {
-        eval { require Crypt::SSLeay } && $Crypt::SSLeay::VERSION >= 0.5
-            || croak "Crypt::SSLeay version 0.50 is required for SSL support";
-
         $new->{$_} =~ s/^http:/https:/
             for qw/apiurl searchapiurl search_trends_api_url lists_api_url/;
     }
@@ -1218,9 +1215,10 @@ secret to upgrade the request token to access token.
       my $nt = Net::Twitter::Lite->new(%param);
       $nt->request_token($cookie{token});
       $nt->request_token_secret($cookie{token_secret});
+      my $verifier = $c->req->param->{oauth_verifier};
 
       my($access_token, $access_token_secret, $user_id, $screen_name) =
-          $nt->request_access_token;
+          $nt->request_access_token(verifier => $verifier);
 
       # Save $access_token and $access_token_secret in the database associated with $c->user
   }

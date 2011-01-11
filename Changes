@@ -1,3 +1,6 @@
+    - doc fix: use verifier in request_access_token call
+    - always use SSL for token exchange
+
 0.10003 2010-05-27
     - fixed ssl test: skip_all if Crypt::SSLeay is not available
 
