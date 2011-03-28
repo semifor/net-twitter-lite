@@ -1,3 +1,6 @@
+0.10004 2011-03-28
+	- ported from Net::Twitter 3.16000
+	- fixed: methods requiring HTTP DELETE failed with OAuth
     - doc fix: use verifier in request_access_token call
     - always use SSL for token exchange
 

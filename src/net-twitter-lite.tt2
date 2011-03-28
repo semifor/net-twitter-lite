@@ -320,8 +320,8 @@ sub _oauth_authenticated_request {
             extra_params   => $is_multipart ? {} : $args,
         );
 
-        if ( $http_method eq 'GET' ) {
-            $msg = GET($request->to_url);
+        if ( $http_method =~ /^(?:GET|DELETE)$/ ) {
+            $msg = HTTP::Request->new($http_method, $request->to_url);
         }
         elsif ( $http_method eq 'POST' ) {
             $msg = $is_multipart
