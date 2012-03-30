@@ -8,12 +8,12 @@ $VERSION = eval { $VERSION };
 
 use Carp;
 use URI::Escape;
-use JSON::Any qw/XS JSON/;
+use JSON;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
 use Encode qw/encode_utf8/;
 
-my $json_handler = JSON::Any->new(utf8 => 1);
+my $json_handler = JSON->new->utf8;
 
 sub new {
     my ($class, %args) = @_;
@@ -541,7 +541,7 @@ for ( qw/list_members is_list_member list_subscribers is_list_subscriber
 sub _from_json {
     my ($self, $json) = @_;
 
-    return eval { $json_handler->from_json($json) };
+    return eval { $json_handler->decode($json) };
 }
 
 sub _parse_result {
