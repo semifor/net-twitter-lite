@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-version '0.10004';
+version '0.11000_00';
 
 if ( $Module::Install::AUTHOR ) {
     eval "use Net::Twitter::Core";
@@ -22,6 +22,7 @@ all_from    'lib/Net/Twitter/Lite.pm';
 # core
 requires    'Carp';
 requires    'Encode';
+requires    'Memoize';
 
 # CPAN
 requires    'JSON::Any'      => '1.21';

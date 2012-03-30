@@ -61,7 +61,7 @@ plan tests => @tests * 4 + 2;
 
 use_ok 'Net::Twitter::Lite';
 
-my $nt = Net::Twitter::Lite->new;
+my $nt = Net::Twitter::Lite->new(legacy_lists_api => 0);
 isa_ok $nt, 'Net::Twitter::Lite';
 
 my $ua = $nt->{ua};

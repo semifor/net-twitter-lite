@@ -44,6 +44,20 @@ sub new {
         %args
     }, $class;
 
+    unless ( exists $new->{legacy_lists_api} ) {
+        $new->{legacy_lists_api} = 1;
+        carp
+"For backwards compatibility @{[ __PACKAGE__ ]} uses the deprecated Lists API
+endpoints and semantics. This default will be changed in a future version.
+Please update your code to use the new lists semantics and pass
+(legacy_lists_api => 0) to new.
+
+You can disable this warning, and keep backwards compatibility by passing
+(legacy_lists_api => 1) to new. Be warned, however, that support for the
+legacy endpoints will be removed in a future version and the default will
+change to (legacy_lists_api => 0).";
+
+    }
 
     if ( delete $args{ssl} ) {
         $new->{$_} =~ s/^http:/https:/
@@ -390,20 +404,20 @@ sub _mk_post_msg {
 { ### scope $api_def
 
 my $api_def = [
-[% FOREACH api IN [ 'REST', 'Search', 'Lists' ] -%]
-    [ [% api %] => [
-[% FOREACH method IN get_methods_for(api) -%]
+[% FOREACH api IN [ [ 'Lists', '^legacy_' ], [ 'REST' ], [ 'Search' ] ] -%]
+    [ [% api.0 %] => [
+[% FOREACH method IN get_methods_for(api.0, api.1) -%]
         [ '[% method.name %]', {
-            aliases     => [ qw/[% method.aliases.join(' ') %]/ ],
-            path        => '[% method.path %]',
-            method      => '[% method.method %]',
-            params      => [ qw/[% method.params.join(' ')  %]/ ],
-            required    => [ qw/[% method.required.join(' ') %]/ ],
-            add_source  => [% method.add_source %],
-            deprecated  => [% method.deprecated %],
-            authenticate => [% method.authenticate %],
-            booleans    => [ qw/[% method.booleans.join(' ') %]/ ],
-        base_url_method => '[% method.base_url_method %]',
+            aliases         => [ qw/[% method.aliases.join(' ') %]/ ],
+            path            => '[% method.path %]',
+            method          => '[% method.method %]',
+            params          => [ qw/[% method.params.join(' ')  %]/ ],
+            required        => [ qw/[% method.required.join(' ') %]/ ],
+            add_source      => [% method.add_source %],
+            deprecated      => [% method.deprecated %],
+            authenticate    => [% method.authenticate %],
+            booleans        => [ qw/[% method.booleans.join(' ') %]/ ],
+            base_url_method => '[% method.base_url_method %]',
         } ],
 [% END -%]
     ] ],
@@ -442,6 +456,15 @@ while ( @$api_def ) {
             # copy callers args since we may add ->{source}
             my $args = ref $_[-1] eq 'HASH' ? { %{pop @_} } : {};
 
+            if ( (my $legacy_method = $self->can("legacy_$name")) && (
+                    exists $$args{-legacy_lists_api} ? delete $$args{-legacy_lists_api}
+                        : $self->{legacy_lists_api} ) ) {
+                return $self->$legacy_method(@_, $args);
+            }
+
+            # just in case it's included where it shouldn't be:
+            delete $args->{-legacy_lists_api};
+
             croak sprintf "$name expected %d args", scalar @$arg_names if @_ > @$arg_names;
 
             # promote positional args to named args
@@ -475,6 +498,11 @@ while ( @$api_def ) {
             $local_path =~ s,/:id$,, unless exists $args->{id}; # remove optional trailing id
             $local_path =~ s/:(\w+)/delete $args->{$1} or croak "required arg '$1' missing"/eg;
 
+            # stringify lists
+            for ( qw/screen_name user_id/ ) {
+                $args->{$_} = join(',' => @{ $args->{$_} }) if ref $args->{$_} eq 'ARRAY';
+            }
+
             my $uri = URI->new($self->{$options{base_url_method}} . "/$local_path.json");
 
             return $self->_parse_result(
@@ -483,12 +511,13 @@ while ( @$api_def ) {
         };
 
         no strict 'refs';
-        *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
+        $name = $_, *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
     }
 }
 
 # catch expected error and promote it to an undef
-for ( qw/list_members is_list_member list_subscribers is_list_subscriber/ ) {
+for ( qw/list_members is_list_member list_subscribers is_list_subscriber
+        legacy_list_members legacy_is_list_member legacy_list_subscribers legacy_is_list_subscriber/ ) {
     my $orig = __PACKAGE__->can($_) or die;
 
     my $code = sub {
@@ -506,30 +535,6 @@ for ( qw/list_members is_list_member list_subscribers is_list_subscriber/ ) {
     no warnings 'redefine';
     *{__PACKAGE__ . "::$_"} = $code;
 }
-
-# special case parameter handling for lookup_users
-for ( qw/lookup_users/ ) {
-    my $orig = __PACKAGE__->can($_) or die;
-
-    my $code = sub {
-        my $self = shift;
-
-        my $args = ref $_[-1] eq 'HASH' ? pop @_ : {};
-        $args = { %$args, @_ };
-
-        for ( qw/screen_name user_id/ ) {
-            $args->{$_} = join(',' => @{ $args->{$_} }) if ref $args->{$_} eq 'ARRAY';
-        }
-
-        return $orig->($self, $args);
-    };
-
-    no strict 'refs';
-    no warnings 'redefine';
-    *{__PACKAGE__ . "::$_"} = $code;
-}
-
-
 
 } ### end scope for $api_def
 
@@ -581,6 +586,7 @@ This document describes Net::Twitter::Lite version [% VERSION %]
   my $nt = Net::Twitter::Lite->new(
       username => $user,
       password => $password
+      legacy_lists_api => 0,
   );
 
   my $result = eval { $nt->update('Hello, world!') };
@@ -612,6 +618,26 @@ versions of C<Net::Twitter>, and additional error handling options.
 
 =head1 CLIENT CODE CHANGES REQUIRED
 
+=head2 Legacy Lists API
+
+Twitter re-implemented the Lists API using new endpoints and semantics. For backwards
+compatibility, this version of C<Net::Twitter::Lite> defaults to the deprecated, legacy
+endpoints and semantics.  It issues a warning if the C<legacy_lists_api> option to new
+is not provided.
+
+To enable the new Lists endpoints and semantics, pass C<(legacy_lists_api => 0)> to
+C<new>.  To disable the warning, and keep the backwards compatible endpoints and
+semantics, pass C<(legacy_lists_api => 1)> to C<new>.
+
+The C<legacy_lists_api> option to C<new> sets the default for all lists API method
+calls.  You can override the default an each API call by passing a C<-legacy_lists_api>
+option set to 1 or 0.
+
+Support for C<legacy_lists_api> option will be removed in a future version and the
+option to C<new> will be silently ignored.
+
+=head2 netrc option
+
 The default C<apiurl> changed in version 0.08006.  The change should be
 transparent to client code, unless you're using the C<netrc> option.  If so,
 you'll need to either update the C<.netrc> entry and change the C<machine>
@@ -622,7 +648,7 @@ or C<netrc_machine> options to C<twitter.com>.
     # -or-
     $nt = Net::Twitter::Lite->new(netrc => 'twitter.com');
 
-=head1 IMPORTANT
+=head2 OAuth requires callback parameter
 
 Beginning with version 0.03, it is necessary for web applications using OAuth
 authentication to pass the C<callback> parameter to C<get_authorization_url>.
@@ -905,6 +931,15 @@ option (below).
 (Optional) Sets the C<machine> entry to look up in C<.netrc> when C<<netrc => 1>>
 is used.  Defaults to C<api.twitter.com>.
 
+=item legacy_lists_api
+
+If set to 1, this option enables backwards compatibility by using the now deprecated
+endpoints and semantics for lists API methods. If set to 0, the new endpoints and
+semantics will be used. Only the new lists API methods are documented here.
+
+If you do not provide this option to C<new> a warning is issued. Support for
+this option and the legacy lists API methods will be removed in a future version.
+
 =back
 
 =back
@@ -1088,10 +1123,6 @@ also parameters, using any one of them satisfies the requirement.
 =head1 Search API Methods
 
 [% INCLUDE APIDOC class='Search' %]
-
-=head1 Lists API Methods
-
-[% INCLUDE APIDOC class='Lists' %]
 
 =head1 ERROR HANDLING
 

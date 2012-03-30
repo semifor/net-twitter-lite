@@ -30,6 +30,7 @@ my $nt = Net::Twitter::Lite->new(
     consumer_key    => 'key',
     consumer_secret => 'secret',
     ua              => $ua,
+    legacy_lists_api => 0,
 );
 $nt->access_token('token');
 $nt->access_token_secret('secret');
@@ -75,6 +76,7 @@ $nt = Net::Twitter::Lite->new(
     username => 'fred',
     password => 'pebbles',
     ua       => $ua,
+    legacy_lists_api => 0,
 );
 
 eval { $nt->update($status) };

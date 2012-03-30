@@ -11,3 +11,4 @@ lib/Net/Twitter/Lite.pm
 *.gz
 .prove
 inc/
+MYMETA.*

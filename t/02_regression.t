@@ -11,7 +11,7 @@ plan tests => 4;
 
 use Net::Twitter::Lite;
 
-my $nt = Net::Twitter::Lite->new;
+my $nt = Net::Twitter::Lite->new(legacy_lists_api => 0);
 
 my $request;
 my %args;
@@ -49,7 +49,8 @@ like $request->header('Authorization'), qr/^Basic /, 'Basic Auth header';
         consumer_secret     => 'secret',
         access_token        => 'token',
         access_token_secret => 'token_secret',
+        legacy_lists_api    => 0,
     );
     mock_response($nt);
-    ok eval { $nt->delete_list(fred => 'pets') }, 'HTTP DELETE';
+    ok eval { $nt->delete_list(fred => 'pets', { -legacy_lists_api => 1}) }, 'HTTP DELETE';
 }

@@ -23,6 +23,7 @@ BasicUser
 clientname
 clienturl
 clientver
+contributees
 DirectMessage
 ExtendedUser
 favorited
@@ -36,6 +37,7 @@ identica
 IM
 inline
 IP
+ip
 IRC
 lang
 Mims
@@ -61,6 +63,7 @@ ssl
 Str
 stringifies
 timeline
+Twitter's
 twitterpm
 twittervision
 Un
@@ -70,6 +73,7 @@ Unsubscribes
 url
 useragent
 username
+usernames
 WiFi
 WOEID
 woeid

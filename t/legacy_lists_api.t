@@ -7,7 +7,7 @@ use Net::Twitter::Lite;
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
 
-my $nt = Net::Twitter::Lite->new(username => 'fred', password => 'secret');
+my $nt = Net::Twitter::Lite->new(username => 'fred', password => 'secret', legacy_lists_api => 1);
 
 my $req;
 my $res = HTTP::Response->new(200);

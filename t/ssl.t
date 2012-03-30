@@ -10,7 +10,7 @@ eval "require Crypt::SSLeay; Crypt::SSLeay->VERSION >= 0.50"
 
 plan tests => 1;
 
-my $nt = Net::Twitter::Lite->new(ssl => 1);
+my $nt = Net::Twitter::Lite->new(ssl => 1, legacy_lists_api => 0);
 
 my $request;
 my $response = HTTP::Response->new(200, 'OK');

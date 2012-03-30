@@ -13,4 +13,12 @@ plan skip_all => 'set TEST_POD to enable this test'
   unless ($ENV{TEST_POD} || -e 'MANIFEST.SKIP');
 
 # skip deprecated methods
-all_pod_coverage_ok({ trustme => [qw/^(?:update_location|downtime_schedule)$/]});
+all_pod_coverage_ok({ trustme => [qr/^(?:
+      update_location
+    | downtime_schedule
+    | followers
+    | following_timeline
+    | friends_timeline
+    | legacy_\w+
+    | trends
+)$/x]});
