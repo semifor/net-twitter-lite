@@ -825,31 +825,6 @@ REST API Methods
 
         Returns: HashRef|ArrayRef[Int]
 
-    friends
-    alias: following
-
-        Parameters: id, user_id, screen_name, cursor, include_entities
-        Required: *none*
-
-        Returns a reference to an array of the user's friends. If "id",
-        "user_id", or "screen_name" is not specified, the friends of the
-        authenticating user are returned. The returned users are ordered
-        from most recently followed to least recently followed.
-
-        Use the optional "cursor" parameter to retrieve users in pages of
-        100. When the "cursor" parameter is used, the return value is a
-        reference to a hash with keys "previous_cursor", "next_cursor", and
-        "users". The value of "users" is a reference to an array of the
-        user's friends. The result set isn't guaranteed to be 100 every time
-        as suspended users will be filtered out. Set the optional "cursor"
-        parameter to -1 to get the first page of users. Set it to the prior
-        return's value of "previous_cursor" or "next_cursor" to page forward
-        or backwards. When there are no prior pages, the value of
-        "previous_cursor" will be 0. When there are no subsequent pages, the
-        value of "next_cursor" will be 0.
-
-        Returns: Hashref|ArrayRef[User]
-
     friends_ids
     friends_ids(id)
     alias: following_ids

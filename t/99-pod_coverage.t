@@ -16,6 +16,8 @@ plan skip_all => 'set TEST_POD to enable this test'
 all_pod_coverage_ok({ trustme => [qr/^(?:
       update_location
     | downtime_schedule
+    | friends
+    | following
     | followers
     | following_timeline
     | friends_timeline
