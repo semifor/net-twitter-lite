@@ -1,3 +1,4 @@
+0.11000_01 2012-04-24
     - functional parity with Net::Twitter 3.18002
     - Replaced JSON::Any with JSON
     - new lists methods, legacy_lists_api option for back compat
