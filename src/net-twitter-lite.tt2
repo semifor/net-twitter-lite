@@ -24,6 +24,7 @@ sub new {
         searchapiurl          => 'http://search.twitter.com',
         search_trends_api_url => 'http://api.twitter.com/1',
         lists_api_url         => 'http://api.twitter.com/1',
+        upload_url            => 'http://upload.twitter.com/1',
         apirealm   => 'Twitter API',
         $args{identica} ? ( apiurl => 'http://identi.ca/api' ) : (),
         useragent  => __PACKAGE__ . "/$VERSION (Perl)",
