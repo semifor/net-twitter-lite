@@ -1,14 +1,4 @@
 .*.swp
-META.yml
-Makefile
-MANIFEST
-blib/
-pm_to_blib
 *.bak
-# Net/Titter/Lite.pm is generated from src/net-twitter-lite.tt2
-lib/Net/Twitter/Lite.pm
-*.old
-*.gz
 .prove
-inc/
-MYMETA.*
+.build/
