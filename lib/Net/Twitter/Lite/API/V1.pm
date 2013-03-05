@@ -1506,3 +1506,9 @@ sub api_def () { +[
 ]}
 
 1;
+
+__END__
+
+=for Pod::Coverage api_def
+
+=cut

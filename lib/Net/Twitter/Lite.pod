@@ -6,7 +6,7 @@ Net::Twitter::Lite - A perl interface to the Twitter API
 
 You probably want L<Net::Twitter::Lite::WithAPIv1_1> which has support for
 Twitter API v1.1. If you're using a service with an API compatible with
-Twitter's depracated API v1, then you're in the right place.
+Twitter's deprecated API v1, then you're in the right place.
 
 =head1 SYNOPSIS
 
@@ -2980,6 +2980,6 @@ Copyright (c) 2013 Marc Mims
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
+=for Pod::Coverage build_api_methods twitter_api_def_from
+
 =cut
-
-

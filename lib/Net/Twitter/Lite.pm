@@ -3,7 +3,13 @@ use 5.005;
 use warnings;
 use strict;
 
-our $VERSION = '0.11002_01';
+=head1 NAME
+
+Net::Twitter::Lite - A perl library for Twitter's API v1
+
+=cut
+
+our $VERSION = '0.12000';
 
 use Carp;
 use URI::Escape;

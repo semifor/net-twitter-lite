@@ -182,7 +182,7 @@ With Twitter API version 1.1, all API calls require OAuth.  Other Twitter
 compatible services, like Identi.ca, accept Basic Authentication.  So,
 this module provides support for both.
 
-For OAuth athentication, provide C<consumer_key> and C<consumer_secret>
+For OAuth authentication, provide C<consumer_key> and C<consumer_secret>
 arguments to C<new>.  Set C<access_token> and C<access_token_secret> for each
 call, or provide them as arguments to C<new>.
 

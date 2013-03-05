@@ -17,6 +17,7 @@ all_pod_files_spelling_ok();
 
 __DATA__
 API
+apirealm
 APIs
 apiurl
 BasicUser
@@ -24,6 +25,7 @@ clientname
 clienturl
 clientver
 contributees
+cursored
 DirectMessage
 ExtendedUser
 favorited
@@ -32,6 +34,7 @@ geo
 geocode
 GPS
 granularities
+Identi
 Identica
 identica
 IM
@@ -39,12 +42,16 @@ inline
 IP
 ip
 IRC
+Laconica
 lang
+maxwidth
 Mims
 multipart
 netrc
 OAUTH
 OAuth
+oEmbed
+oembed
 ok
 RateLimitStatus
 requester's
@@ -55,6 +62,7 @@ retweeting
 Retweets
 retweets
 rpp
+RWD
 SavedSearch
 SMS
 spammer
