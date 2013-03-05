@@ -3,9 +3,9 @@ use warnings;
 use strict;
 use parent 'Net::Twitter::Lite';
 
-sub twitter_api_def_from () { 'Net::Twitter::Lite::API::V1_1' }
-sub _default_api_url               () { 'http://api.twitter.com/1.1'  }
-sub _default_searchapiurl          () { 'http://search.twitter.com'   }
+sub twitter_api_def_from           () { 'Net::Twitter::Lite::API::V1_1' }
+sub _default_api_url               () { 'http://api.twitter.com/1.1'    }
+sub _default_searchapiurl          () { 'http://search.twitter.com'     }
 sub _default_search_trends_api_url () { 'http://api.twitter.com/1.1'    }
 sub _default_lists_api_url         () { 'http://api.twitter.com/1.1'    }
 
