@@ -1,3 +1,6 @@
+    - URI encode POSTDATA to match Twitter's more stringent (non-standard) requirements
+    - created Net::Twitter::Lite::WithAPIv1_1 for Twitter API v1.1 support
+    
 0.11002 2012-06-27
     - rebuilt from Net::Twitter 3.18003 to fix replies, mentions path
 
