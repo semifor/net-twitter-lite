@@ -7,7 +7,7 @@ use warnings;
 use strict;
 use base qw/HTTP::Server::Simple::CGI/;
 
-use Net::Twitter::Lite;
+use Net::Twitter::Lite::WithAPIv1_1;
 use Data::Dumper;
 
 # You can replace the consumer tokens with your own;
@@ -19,7 +19,7 @@ my %consumer_tokens = (
 
 my $server_port = 8080;
 
-sub twitter { shift->{twitter} ||= Net::Twitter::Lite->new(%consumer_tokens) }
+sub twitter { shift->{twitter} ||= Net::Twitter::Lite::WithAPIv1_1->new(%consumer_tokens) }
 
 my %dispatch = (
     '/oauth_callback' => \&oauth_callback,

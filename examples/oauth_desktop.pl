@@ -5,7 +5,7 @@
 use warnings;
 use strict;
 
-use Net::Twitter::Lite;
+use Net::Twitter::Lite::WithAPIv1_1;
 use File::Spec;
 use Storable;
 use Data::Dumper;
@@ -21,7 +21,7 @@ my %consumer_tokens = (
 my (undef, undef, $datafile) = File::Spec->splitpath($0);
 $datafile =~ s/\..*/.dat/;
 
-my $nt = Net::Twitter::Lite->new(%consumer_tokens);
+my $nt = Net::Twitter::Lite::WithAPIv1_1->new(%consumer_tokens);
 my $access_tokens = eval { retrieve($datafile) } || [];
 
 if ( @$access_tokens ) {
