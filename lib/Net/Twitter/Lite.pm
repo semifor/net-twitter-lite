@@ -147,39 +147,6 @@ sub authorized {
     return defined $self->{access_token} && $self->{access_token_secret};
 }
 
-# OAuth token accessors
-for my $method ( qw/
-            access_token
-            access_token_secret
-            request_token
-            request_token_secret
-        / ) {
-    no strict 'refs';
-    *{__PACKAGE__ . "::$method"} = sub {
-        my $self = shift;
-
-        $self->{$method} = shift if @_;
-        return $self->{$method};
-    };
-}
-
-# OAuth url accessors
-for my $method ( qw/
-            request_token_url
-            authentication_url
-            authorization_url
-            access_token_url
-            xauth_url
-        / ) {
-    no strict 'refs';
-    *{__PACKAGE__ . "::$method"} = sub {
-        my $self = shift;
-
-        $self->{oauth_urls}{$method} = shift if @_;
-        return URI->new($self->{oauth_urls}{$method});
-    };
-}
-
 # get the athorization or authentication url
 sub _get_auth_url {
     my ($self, $which_url, %params ) = @_;
@@ -519,14 +486,14 @@ sub build_api_methods {
             };
 
             no strict 'refs';
-            $name = $_, *{__PACKAGE__ . "::$_"} = $code for $name, @{$options{aliases}};
+            $name = $_, *{"$class\::$_"} = $code for $name, @{$options{aliases}};
         }
     }
 
     # catch expected error and promote it to an undef
     for ( qw/list_members is_list_member list_subscribers is_list_subscriber
             legacy_list_members legacy_is_list_member legacy_list_subscribers legacy_is_list_subscriber/ ) {
-        my $orig = __PACKAGE__->can($_) or die;
+        my $orig = $class->can($_) or next;
 
         my $code = sub {
             my $r = eval { $orig->(@_) };
@@ -541,7 +508,40 @@ sub build_api_methods {
 
         no strict 'refs';
         no warnings 'redefine';
-        *{__PACKAGE__ . "::$_"} = $code;
+        *{"$class\::$_"} = $code;
+    }
+
+    # OAuth token accessors
+    for my $method ( qw/
+                access_token
+                access_token_secret
+                request_token
+                request_token_secret
+            / ) {
+        no strict 'refs';
+        *{"$class\::$method"} = sub {
+            my $self = shift;
+
+            $self->{$method} = shift if @_;
+            return $self->{$method};
+        };
+    }
+
+    # OAuth url accessors
+    for my $method ( qw/
+                request_token_url
+                authentication_url
+                authorization_url
+                access_token_url
+                xauth_url
+            / ) {
+        no strict 'refs';
+        *{"$class\::$method"} = sub {
+            my $self = shift;
+
+            $self->{oauth_urls}{$method} = shift if @_;
+            return URI->new($self->{oauth_urls}{$method});
+        };
     }
 
 }
