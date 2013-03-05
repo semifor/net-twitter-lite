@@ -5,8 +5,8 @@ Net::Twitter::Lite - A perl interface to the Twitter API
 =head1 STOP!
 
 You probably want L<Net::Twitter::Lite::WithAPIv1_1> which has support for
-Twitter API v1.1. If you're using a service with an API compatible with Twitter
-API v1, instead, then you're in the right place.
+Twitter API v1.1. If you're using a service with an API compatible with
+Twitter's depracated API v1, then you're in the right place.
 
 =head1 SYNOPSIS
 
