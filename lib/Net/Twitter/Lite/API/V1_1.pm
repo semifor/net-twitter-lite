@@ -342,8 +342,8 @@ sub api_def () { +[
             booleans        => [ qw// ],
             base_url_method => 'apiurl',
         } ],
-        [ 'friends_list', {
-            aliases         => [ qw// ],
+        [ 'friends', {
+            aliases         => [ qw/friends_list/ ],
             path            => 'friends/list',
             method          => 'GET',
             params          => [ qw/user_id screen_name cursor skip_status include_user_entities/ ],
@@ -354,8 +354,8 @@ sub api_def () { +[
             booleans        => [ qw/skip_status include_user_entities/ ],
             base_url_method => 'apiurl',
         } ],
-        [ 'followers_list', {
-            aliases         => [ qw// ],
+        [ 'followers', {
+            aliases         => [ qw/followers_list/ ],
             path            => 'followers/list',
             method          => 'GET',
             params          => [ qw/user_id screen_name cursor skip_status include_user_entities/ ],
