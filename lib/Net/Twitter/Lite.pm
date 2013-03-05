@@ -402,10 +402,27 @@ sub _basic_authenticated_request {
 sub _mk_post_msg {
     my ($self, $uri, $args) = @_;
 
-    # if any of the arguments are (array) refs, use form-data
-    return (grep { ref } values %$args)
-         ? POST($uri, Content_Type => 'form-data', Content => [ %$args ])
-         : POST($uri, $args);
+    if ( grep { ref } values %$args ) {
+        # if any of the arguments are (array) refs, use form-data
+        return POST($uri, Content_Type => 'form-data', Content => [ %$args ]);
+    }
+    else {
+        # There seems to be a bug introduced by Twitter about 2013-02-25: If
+        # post arguments are uri encoded exactly the same way the OAuth spec
+        # requires base signature string encoding, Twitter chokes and throws a
+        # 401.  This seems to be a violation of the OAuth spec on Twitter's
+        # part. The specifically states the more stringent URI encoding is for
+        # consistent signature generation and *only* applies to encoding the
+        # base signature string and Authorization header.
+
+        my @pairs;
+        while ( my ($k, $v) = each %$args ) {
+            push @pairs, join '=', map URI::Escape::uri_escape_utf8($_, '^A-Za-z0-9\-\._~'), $k, $v;
+        }
+
+        my $content = join '&', @pairs;
+        return POST($uri, Content => $content);
+    }
 }
 
 sub build_api_methods {
