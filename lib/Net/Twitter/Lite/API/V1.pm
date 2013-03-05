@@ -2,7 +2,11 @@ package Net::Twitter::Lite::API::V1;
 use warnings;
 use strict;
 
-sub base_url () { 'https://api.twitter.com/1' }
+=head1 NAME
+
+Net::Twitter::Lite::API::V1 - Method definitions for Twitter's deprecated API v1
+
+=cut
 
 sub api_def () { +[
     [ Lists => [
