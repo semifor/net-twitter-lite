@@ -2534,6 +2534,10 @@ Track development at L<http://github.com/semifor/net-twitter-lite>.
 
 Marc Mims <marc@questright.com> (@semifor on Twitter)
 
+=head1 CONTRIBUTORS
+
+Marek Foss (@f055)
+
 =head1 LICENSE
 
 Copyright (c) 2013 Marc Mims
