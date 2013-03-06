@@ -27,9 +27,9 @@ sub raw_sent_status {
 sub sent_status { decode_utf8 raw_sent_status() }
 
 my $nt = Net::Twitter::Lite->new(
-    consumer_key    => 'key',
-    consumer_secret => 'secret',
-    ua              => $ua,
+    username         => 'key',
+    password         => 'secret',
+    ua               => $ua,
     legacy_lists_api => 0,
 );
 $nt->access_token('token');
