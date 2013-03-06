@@ -42,7 +42,10 @@ $nt->credentials('barney','rubble');
 $r = $nt->user_timeline;
 like $request->header('Authorization'), qr/^Basic /, 'Basic Auth header';
 
-{
+SKIP: {
+    eval 'use Net::OAuth 0.25';
+    skip "Net::OAuth >= 0.25 required for this test", 1 if $@;
+
     # NTL fails on methods using HTTP DELETE with OAuth (reported 2011-03-28)
     my $nt = Net::Twitter::Lite->new(
         consumer_key        => 'key',
