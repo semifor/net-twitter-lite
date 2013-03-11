@@ -2,7 +2,7 @@ NAME
     Net::Twitter::Lite - A perl interface to the Twitter API
 
 VERSION
-    version 0.12001
+    version 0.12002
 
 STOP!
     You probably want Net::Twitter::Lite::WithAPIv1_1 which has support for

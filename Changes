@@ -1,3 +1,6 @@
+0.12002 2013-03-11
+    - 30 second delay in OAuth requests fixed with Net::HTTP 6.06
+
 0.12001 2013-03-06
     - Fixed tests (Net::OAuth is optional) (closses issue #7)
     - Updated examples to use Twitter API v1.1
