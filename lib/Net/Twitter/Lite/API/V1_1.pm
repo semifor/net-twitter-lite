@@ -686,11 +686,11 @@ sub api_def () { +[
         } ],
 
 # Lists
-        [ 'all_subscriptions', {
-            aliases         => [ qw/all_lists list_subscriptions/ ],
+        [ 'get_lists', {
+            aliases         => [ qw/list_lists all_subscriptions/ ],
             path            => 'lists/list',
             method          => 'GET',
-            params          => [ qw/user_id screen_name/ ],
+            params          => [ qw/user_id screen_name reverse/ ],
             required        => [ qw// ],
             add_source      => 0,
             deprecated      => 0,
@@ -896,6 +896,18 @@ sub api_def () { +[
             method          => 'POST',
             params          => [ qw/list_id slug user_id screen_name owner_screen_name owner_id/ ],
             required        => [ qw/list_id slug/ ],
+            add_source      => 0,
+            deprecated      => 0,
+            authenticate    => 1,
+            booleans        => [ qw// ],
+            base_url_method => 'apiurl',
+        } ],
+        [ 'list_ownerships', {
+            aliases         => [],
+            path            => 'lists/ownerships',
+            method          => 'GET',
+            params          => [ qw/user_id screen_name count cursor/ ],
+            required        => [ qw// ],
             add_source      => 0,
             deprecated      => 0,
             authenticate    => 1,
