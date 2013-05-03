@@ -878,8 +878,8 @@ sub api_def () { +[
             booleans        => [ qw// ],
             base_url_method => 'apiurl',
         } ],
-        [ 'subscriptions', {
-            aliases         => [ qw// ],
+        [ 'list_subscriptions', {
+            aliases         => [ qw/subscriptions/ ],
             path            => 'lists/subscriptions',
             method          => 'GET',
             params          => [ qw/user_id screen_name count cursor/ ],
