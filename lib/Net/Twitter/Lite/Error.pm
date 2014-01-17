@@ -1,4 +1,5 @@
 package Net::Twitter::Lite::Error;
+
 use warnings;
 use strict;
 
