@@ -50,7 +50,7 @@ plan tests => @tests * 4 + 2;
 
 use_ok 'Net::Twitter::Lite::WithAPIv1_1';
 
-my $nt = Net::Twitter::Lite::WithAPIv1_1->new;
+my $nt = Net::Twitter::Lite::WithAPIv1_1->new(ssl => 1);
 isa_ok $nt, 'Net::Twitter::Lite::WithAPIv1_1';
 
 my $ua = $nt->{ua};

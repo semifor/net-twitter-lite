@@ -19,7 +19,8 @@ my %consumer_tokens = (
 
 my $server_port = 8080;
 
-sub twitter { shift->{twitter} ||= Net::Twitter::Lite::WithAPIv1_1->new(%consumer_tokens) }
+sub twitter { shift->{twitter} ||= Net::Twitter::Lite::WithAPIv1_1->new(
+    ssl => 1, %consumer_tokens) }
 
 my %dispatch = (
     '/oauth_callback' => \&oauth_callback,
