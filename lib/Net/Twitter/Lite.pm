@@ -16,6 +16,7 @@ use JSON;
 use HTTP::Request::Common;
 use Net::Twitter::Lite::Error;
 use Encode qw/encode_utf8/;
+use Net::Twitter::Lite::WrapResult;
 
 sub twitter_api_def_from           () { 'Net::Twitter::Lite::API::V1' }
 sub _default_api_url               () { 'http://api.twitter.com/1'    }
@@ -572,7 +573,12 @@ sub _parse_result {
         die Net::Twitter::Lite::Error->new(twitter_error => $obj, http_response => $res);
     }
 
-    return $obj if $res->is_success && defined $obj;
+    if ( $res->is_success && defined $obj ) {
+        if ( $self->{wrap_result} ) {
+            $obj = Net::Twitter::Lite::WrapResult->new($obj, $res);
+        }
+        return $obj;
+    }
 
     my $error = Net::Twitter::Lite::Error->new(http_response => $res);
     $error->twitter_error($obj) if ref $obj;

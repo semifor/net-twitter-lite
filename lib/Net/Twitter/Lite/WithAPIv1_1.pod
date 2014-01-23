@@ -196,6 +196,13 @@ credentials. If set to 1, will use the value of the C<netrc_machine> option
 (Optional) Sets the C<machine> entry to look up in C<.netrc> when C<<netrc => 1>>
 is used.  Defaults to C<api.twitter.com>.
 
+=item wrap_result
+
+(Optional) If set to 1, this option will return an
+L<Net::Twitter::Lite::WrapResult> object, which provides both the Twitter API
+result and the L<HTTP::Response> object for the API call. See
+L<Net::Twitter::Lite::WrapResult> for details.
+
 =back
 
 =item credentials($username, $password)

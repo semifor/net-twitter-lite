@@ -370,7 +370,12 @@ semantics will be used. Only the new lists API methods are documented here.
 If you do not provide this option to C<new> a warning is issued. Support for
 this option and the legacy lists API methods will be removed in a future version.
 
-=back
+=item wrap_result
+
+(Optional) If set to 1, this option will return an
+L<Net::Twitter::Lite::WrapResult> object, which provides both the Twitter API
+result and the L<HTTP::Response> object for the API call. See
+L<Net::Twitter::Lite::WrapResult> for details.  =back
 
 =back
 
