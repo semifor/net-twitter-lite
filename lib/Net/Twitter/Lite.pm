@@ -572,6 +572,13 @@ sub _parse_result {
         die Net::Twitter::Lite::Error->new(twitter_error => $obj, http_response => $res);
     }
 
+    # Include rate limiting information in the result if available.
+    if(defined $obj && $res->header('x-rate-limit-limit')) {
+        $obj->{"limits"}->{"limit"} = $res->header('x-rate-limit-limit');
+        $obj->{"limits"}->{"remaining"} = $res->header('x-rate-limit-remaining');
+        $obj->{"limits"}->{"reset"} = $res->header('x-rate-limit-reset');
+    }
+
     return $obj if $res->is_success && defined $obj;
 
     my $error = Net::Twitter::Lite::Error->new(http_response => $res);
