@@ -375,7 +375,9 @@ this option and the legacy lists API methods will be removed in a future version
 (Optional) If set to 1, this option will return an
 L<Net::Twitter::Lite::WrapResult> object, which provides both the Twitter API
 result and the L<HTTP::Response> object for the API call. See
-L<Net::Twitter::Lite::WrapResult> for details.  =back
+L<Net::Twitter::Lite::WrapResult> for details.
+
+=back
 
 =back
 
@@ -2978,6 +2980,10 @@ Track Net::Twitter::Lite development at L<http://github.com/semifor/net-twitter-
 =head1 AUTHOR
 
 Marc Mims <marc@questright.com>
+
+=head1 CONTRIBUTORS
+
+
 
 =head1 LICENSE
 

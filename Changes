@@ -1,4 +1,5 @@
-    - Optionally return both the Twitter result and HTTP::Response
+0.12006 2014-01-24
+    - Added WrapResult: return both the Twitter result and HTTP::Response
 
 0.12005 2014-01-17
     - Twitter now requires SSL connections
