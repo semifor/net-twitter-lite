@@ -1,5 +1,7 @@
 package Net::Twitter::Lite::WrapResult;
 
+use strict;
+
 =head1 NAME
 
 Net::Twitter::Lite::WrapResult - Wrap the HTTP response and Twitter result
@@ -54,11 +56,17 @@ sub new {
 
 Returns the inflated Twitter API result.
 
+=cut
+
+sub result { shift->{result} }
+
 =item http_response
 
 Returns the L<HTTP::Response> object for the API call.
 
 =cut
+
+sub http_response { shift->{http_response} }
 
 # private method
 my $limit = sub {
@@ -95,11 +103,6 @@ suitable header is available.
 =cut
 
 sub rate_limit_reset     { shift->$limit('Reset') }
-
-use strict;
-use base 'Class::Accessor::Grouped';
-
-__PACKAGE__->mk_group_accessors(simple => qw/result http_response/);
 
 1;
 
