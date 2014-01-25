@@ -85,7 +85,7 @@ Returns undef if no suitable rate limit header is available.
 
 sub rate_limit           { shift->$limit('Limit') }
 
-=item rate_limit_remaning
+=item rate_limit_remaining
 
 Returns the calls remaining in the current 15 minute window for the API
 endpoint called.  Returns undef if no suitable header is available.
