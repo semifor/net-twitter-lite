@@ -2655,7 +2655,7 @@ C<undef> as the first array value.
 The Tweet text will be rewritten to include the media URL(s), which will reduce
 the number of characters allowed in the Tweet text. If the URL(s) cannot be
 appended without text truncation, the tweet will be rejected and this method
-will return an HTTP 403 error. 
+will return an HTTP 403 error.
 
 
 Returns: Status
@@ -2983,7 +2983,7 @@ Marc Mims <marc@questright.com>
 
 =head1 CONTRIBUTORS
 
-
+Chris Page <chris@starforge.co.uk>
 
 =head1 LICENSE
 
