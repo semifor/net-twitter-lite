@@ -1,8 +1,6 @@
-#!/usr/bin/env perl
-
 =head1 NAME
 
-Net::Twitter::Lite::WithAPIv1_1 - A perl interface to the Twitter API
+Net::Twitter::Lite::WithAPIv1_1 - A perl interface to the Twitter API v1.1
 
 =head1 SYNOPSIS
 
@@ -64,7 +62,7 @@ significantly changing the behavior for anyone upgrading.
 =head1 DESCRIPTION
 
 This module provides a perl interface to the Twitter APIs.  See
-L<http://dev.twitter.com/docs/api/1.1> for a full description of the Twitter
+L<https://dev.twitter.com/docs/api/1.1/overview> for a full description of the Twitter
 APIs.
 
 =head1 RETURN VALUES
@@ -79,7 +77,7 @@ Instead, rely on the online Twitter API documentation and inspection of the
 returned data.
 
 The Twitter API online documentation is located at
-L<http://dev.twitter.com/docs/1.1>.
+L<https://dev.twitter.com/docs/api/1.1/overview>.
 
 To inspect the data, use L<Data::Dumper> or similar module of your choice.
 Here's a simple example using Data::Dumper:
