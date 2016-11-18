@@ -12,7 +12,6 @@ Net::Twitter::Lite::WithAPIv1_1 - A perl interface to the Twitter API v1.1
       consumer_secret     => $consumer_secret,
       access_token        => $token,
       access_token_secret => $token_secret,
-      ssl                 => 1,
   );
 
   my $result = $nt->update('Hello, world!');
@@ -30,34 +29,6 @@ Net::Twitter::Lite::WithAPIv1_1 - A perl interface to the Twitter API v1.1
            "HTTP Message......: ", $err->message, "\n",
            "Twitter error.....: ", $err->error, "\n";
   }
-
-=head1 TWITTER NOW REQUIRES SSL
-
-B<Deprecation cycle>. Twitter now requires SSL connections for API calls. To
-enable SSL, add C<( ssl =E<gt> 1)> to the options passed to new. E.g.,
-
-    my $nt = Net::Twitter::Lite::WithAPIv1_1->new(
-        consumer_key        => $key,
-        consumer_secret     => $secret,
-        access_token        => $token,
-        access_token_secret => $token_secret,
-        ssl                 => 1,  ## enable SSL! ##
-    );
-
-This version will warn if no C<ssl> option is passed to C<new>. For backwards
-compatibility, the default in this version remains SSL disabled. A future
-release will change the default to SSL enabled and remove the warning. Add
-C<( ssl =E<gt> 0 )> to disable the warning and keep SSL disabled.
-
-B<Why not just make the default SSL enabled, now?> Net::Twitter::Lite has
-always tried to adhere to a strict policy of backwards compatibility. An
-upgrade to Net::Twitter::Lite should not break or significantly change the
-behavior of existing code that relies on it. Net::Twitter is used by some for
-Twitter API compatible services that may or may not require SSL, and for some
-private test services that require non-SSL connections. They shouldn't break
-when Net::Twitter::Lite is upgraded. This deprecation cycle is the minimally
-invasive change that lets user know about Twitter's change without
-significantly changing the behavior for anyone upgrading.
 
 =head1 DESCRIPTION
 
@@ -169,7 +140,7 @@ the C<OAuth> trait is included.
 
 =item ssl
 
-If set to 1, an SSL connection will be used for all API calls. Defaults to 0.
+If set to 1, an SSL connection will be used for all API calls. Defaults to 1.
 
 =item netrc
 
@@ -1077,7 +1048,7 @@ Returns: HashRef
 =back
 
 Returns the 20 most recent statuses, including retweets, posted by the
-authenticating user and that user's friends. 
+authenticating user and that user's friends.
 
 
 Returns: ArrayRef[Status]
@@ -1447,7 +1418,7 @@ Returns: User
 
 =back
 
-Retweets a tweet. 
+Retweets a tweet.
 
 
 Returns: Status
@@ -1877,7 +1848,7 @@ ID L<http://developer.yahoo.com/geo/geoplanet/>) and some other human-readable
 information such as a the location's canonical name and country.
 
 For backwards compatibility, this method accepts optional C<lat> and C<long>
-parameters. You should call C<trends_closest> directly, instead. 
+parameters. You should call C<trends_closest> directly, instead.
 
 Use the WOEID returned in the location object to query trends for a specific
 location.
@@ -2257,7 +2228,7 @@ C<undef> as the first array value.
 The Tweet text will be rewritten to include the media URL(s), which will reduce
 the number of characters allowed in the Tweet text. If the URL(s) cannot be
 appended without text truncation, the tweet will be rejected and this method
-will return an HTTP 403 error. 
+will return an HTTP 403 error.
 
 
 Returns: Status
@@ -2414,7 +2385,7 @@ C<undef> as the first array value.
 The Tweet text will be rewritten to include the media URL(s), which will reduce
 the number of characters allowed in the Tweet text. If the URL(s) cannot be
 appended without text truncation, the tweet will be rejected and this method
-will return an HTTP 403 error. 
+will return an HTTP 403 error.
 
 
 Returns: Status

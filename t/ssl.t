@@ -5,9 +5,6 @@ use Net::Twitter::Lite;
 eval 'use LWP::UserAgent 5.819';
 plan skip_all => 'LWP::UserAgent 5.819 required' if $@;
 
-eval "require Crypt::SSLeay; Crypt::SSLeay->VERSION >= 0.50"
-    || plan skip_all => "Crypt::SSLeay 0.50 required: $@";
-
 plan tests => 1;
 
 my $nt = Net::Twitter::Lite->new(ssl => 1, legacy_lists_api => 0);
