@@ -446,7 +446,7 @@ sub build_api_methods {
                 # just in case it's included where it shouldn't be:
                 delete $args->{-legacy_lists_api};
 
-                croak sprintf "$name expected %d args", scalar @$arg_names if @_ > @$arg_names;
+                croak sprintf "$name expected %d args", scalar @$arg_names if @_ < @$arg_names;
 
                 # promote positional args to named args
                 for ( my $i = 0; @_; ++$i ) {
