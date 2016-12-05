@@ -25,7 +25,11 @@ sub new {
         $options{ssl} = 1;
     }
 
-    return $class->SUPER::new(legacy_lists_api => 0, %options);
+    return $class->SUPER::new(
+        legacy_lists_api => 0,
+        upload_url       => 'https://upload.twitter.com/1.1',
+        %options
+    );
 }
 
 1;

@@ -299,7 +299,8 @@ sub _oauth_authenticated_request {
 
     delete $args->{source}; # not necessary with OAuth requests
 
-    my $is_multipart = grep { ref } %$args;
+    my $content_type = delete $args->{-content_type} || '';
+    my $is_multipart = $content_type eq 'form-data' || grep { ref } %$args;
 
     my $msg;
     if ( $authenticate && $self->authorized ) {
@@ -427,7 +428,8 @@ sub build_api_methods {
             my %options = %{ shift @$method };
 
             my ($arg_names, $path) = @options{qw/required path/};
-            $arg_names = $options{params} if @$arg_names == 0 && @{$options{params}} == 1;
+            $arg_names = $options{params}
+                if @$arg_names == 0 && @{$options{params}} == 1;
 
             my $modify_path = $path =~ s,/id$,/, ? $with_url_arg : sub { $_[0] };
 
@@ -436,9 +438,13 @@ sub build_api_methods {
 
                 # copy callers args since we may add ->{source}
                 my $args = ref $_[-1] eq 'HASH' ? { %{pop @_} } : {};
+                if ( my $content_type = $options{content_type} ) {
+                    $args->{-content_type} = $options{content_type};
+                }
 
                 if ( (my $legacy_method = $self->can("legacy_$name")) && (
-                        exists $$args{-legacy_lists_api} ? delete $$args{-legacy_lists_api}
+                        exists $$args{-legacy_lists_api}
+                            ? delete $$args{-legacy_lists_api}
                             : $self->{legacy_lists_api} ) ) {
                     return $self->$legacy_method(@_, $args);
                 }
@@ -446,7 +452,8 @@ sub build_api_methods {
                 # just in case it's included where it shouldn't be:
                 delete $args->{-legacy_lists_api};
 
-                croak sprintf "$name expected %d args", scalar @$arg_names if @_ > @$arg_names;
+                croak sprintf "$name expected %d args", scalar @$arg_names
+                    if @_ > @$arg_names;
 
                 # promote positional args to named args
                 for ( my $i = 0; @_; ++$i ) {
@@ -459,9 +466,10 @@ sub build_api_methods {
 
                 $args->{source} ||= $self->{source} if $options{add_source};
 
-                my $authenticate = exists $args->{authenticate}  ? delete $args->{authenticate}
-                                 : $options{authenticate}
-                                 ;
+                my $authenticate = exists $args->{authenticate}
+                    ? delete $args->{authenticate}
+                    : $options{authenticate};
+
                 # promote boolean parameters
                 for my $boolean_arg ( @{ $options{booleans} } ) {
                     if ( exists $args->{$boolean_arg} ) {
@@ -472,22 +480,30 @@ sub build_api_methods {
 
                 # Workaround Twitter bug: any value passed for skip_user is treated as true.
                 # The only way to get 'false' is to not pass the skip_user at all.
-                delete $args->{skip_user} if exists $args->{skip_user} && $args->{skip_user} eq 'false';
+                delete $args->{skip_user} if exists $args->{skip_user}
+                    && $args->{skip_user} eq 'false';
 
                 # replace placeholder arguments
                 my $local_path = $path;
-                $local_path =~ s,/:id$,, unless exists $args->{id}; # remove optional trailing id
-                $local_path =~ s/:(\w+)/delete $args->{$1} or croak "required arg '$1' missing"/eg;
+
+                # remove optional trailing id
+                $local_path =~ s,/:id$,, unless exists $args->{id};
+                $local_path =~ s/:(\w+)/delete $args->{$1}
+                    or croak "required arg '$1' missing"/eg;
 
                 # stringify lists
                 for ( qw/screen_name user_id/ ) {
-                    $args->{$_} = join(',' => @{ $args->{$_} }) if ref $args->{$_} eq 'ARRAY';
+                    $args->{$_} = join(',' => @{ $args->{$_} })
+                        if ref $args->{$_} eq 'ARRAY';
                 }
 
-                my $uri = URI->new($self->{$options{base_url_method}} . "/$local_path.json");
+                my $uri = URI->new($self->{$options{base_url_method}}
+                    . "/$local_path.json");
 
                 return $self->_parse_result(
-                    $self->_authenticated_request($options{method}, $uri, $args, $authenticate)
+                    $self->_authenticated_request(
+                        $options{method}, $uri, $args, $authenticate
+                    )
                 );
             };
 

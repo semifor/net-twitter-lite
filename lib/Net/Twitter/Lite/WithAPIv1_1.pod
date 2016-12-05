@@ -113,8 +113,12 @@ originally used by Twitter to provide an "via" application byline.
 
 =item apiurl
 
-The URL for the Twitter API. This defaults to "http://api.twitter.com/1". This
-option is available when the C<API::RESTv1_1> trait is included.
+The URL for the Twitter API. This defaults to "http://api.twitter.com/1.1".
+This option is available when the C<API::RESTv1_1> trait is included.
+
+=item upload_url
+
+Base URL for media uploads. Defaults to "https://upload.twitter.com/1.1".
 
 =item apirealm
 
@@ -2193,23 +2197,19 @@ C<undef> as the first array value.
 
 Returns: ExtendedUser
 
-=item B<update_with_media>
+=item B<upload_media>
 
-=item B<update_with_media(status, media[])>
-
-
+=item alias: upload
 
 =over 4
 
-=item Parameters: status, media[], possibly_sensitive, in_reply_to_status_id, lat, long, place_id, display_coordinates
+=item Parameters: media, media_data, additional_owners
 
-=item Required: status, media[]
+=item Required: media or media_data
 
 =back
 
-Updates the authenticating user's status and attaches media for upload.
-
-The C<media[]> parameter is an arrayref with the following interpretation:
+The C<media> parameter is an arrayref with the following interpretation:
 
   [ $file ]
   [ $file, $filename ]
@@ -2225,13 +2225,9 @@ L<LWP::MediaTypes::guess_media_type()>.
 C<$raw_image_data> can be provided, rather than opening a file, by passing
 C<undef> as the first array value.
 
-The Tweet text will be rewritten to include the media URL(s), which will reduce
-the number of characters allowed in the Tweet text. If the URL(s) cannot be
-appended without text truncation, the tweet will be rejected and this method
-will return an HTTP 403 error.
+Or, pass base64-encoded data with the C<media_data> parameter.
 
-
-Returns: Status
+Returns: Hashref with media_id.
 
 =item B<user_suggestions>
 
