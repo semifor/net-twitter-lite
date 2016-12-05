@@ -2527,7 +2527,7 @@ detailed error information, you can simply treat $@ as a string:
 
 The C<Net::Twitter::Lite> exception object.
 
-=item L<http://dev.twitter.com/doc>
+=item L<http://dev.twitter.com/rest/reference>
 
 This is the official Twitter API documentation. It describes the methods and their
 parameters in more detail and may be more current than the documentation provided
@@ -2543,12 +2543,15 @@ along with Net::Twitter::Lite to provide concurrent, non-blocking requests.
 This module, by Jesse Stay, provides Twitter OAuth authentication support for
 the popular L<Catalyst> web application framework.
 
+=item L<AnyEvent::Twitter::Stream>
+
+An excellent module for Twitter Streaming API support.
+
 =back
 
 =head1 SUPPORT
 
-Please report bugs to C<bug-net-twitter@rt.cpan.org>, or through the web
-interface at L<https://rt.cpan.org/Dist/Display.html?Queue=Net-Twitter>.
+Please report bugs at L<https://github.com/semifor/net-twitter-lite/issues>.
 
 Join the #net-twitter IRC channel on irc.perl.org.
 
