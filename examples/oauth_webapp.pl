@@ -7,8 +7,8 @@ use warnings;
 use strict;
 use base qw/HTTP::Server::Simple::CGI/;
 
-use Net::Twitter::Lite::WithAPIv1_1;
 use Data::Dumper;
+use Net::Twitter::Lite::WithAPIv1_1;
 
 # You can replace the consumer tokens with your own;
 # these tokens are for the Net::Twitter example app.
@@ -19,8 +19,28 @@ my %consumer_tokens = (
 
 my $server_port = 8080;
 
-sub twitter { shift->{twitter} ||= Net::Twitter::Lite::WithAPIv1_1->new(
-    ssl => 1, %consumer_tokens) }
+# The server needs to store request tokens/secrets. When a user is returned
+# from Twitter's authentication flow to our callback URL, the request token
+# will be included in the callback parameters. We'll look up the secret that
+# matches the token. It will be used to obtain an access token/secret.  Request
+# tokens are only good for about 15 minutes.
+#
+# In a production app, you'll want to use something like Redis to automatically
+# expire secrets after 20 minutes or so. (Keep them a bit longer than Twitter
+# so Twitter drops them first. You don't want to surprise users who authorize
+# on Twitter and then you faile to find the secret you need to obtain access
+# tokens.
+#
+# For our simple demo, we'll just store them in memory with expiration.
+my $request_token_cache = {};
+
+# We only need it once!
+sub get_secret { delete $request_token_cache->{shift()} }
+sub set_secret { $request_token_cache->{$_[0]} = $_[1]  }
+
+sub twitter_client {
+    Net::Twitter::Lite::WithAPIv1_1->new(%consumer_tokens);
+}
 
 my %dispatch = (
     '/oauth_callback' => \&oauth_callback,
@@ -33,34 +53,34 @@ sub handle_request {
     my ($self, $q) = @_;
 
     my $request = $q->path_info;
-    warn "Handling request for $request\n";
+    warn "Handling request for ${ \$q->url(-full => 1) }\n";
 
     my $handler = $dispatch{$request} || \&not_found;
     $self->$handler($q);
 }
 
-# Display the authenicated user's last tweet in all its naked glory
+# Display the authenicated user's last tweet
 sub my_last_tweet {
     my ($self, $q) = @_;
 
     # if the user is authorized, we'll get access tokens from a cookie
-    my %sess = $q->cookie('sess');
+    my %tokens = $q->cookie('dont-do-this');
 
-    unless ( %sess ) {
+    unless ( %tokens ) {
         warn "User has no access_tokens\n";
         return $self->authorize($q);
     }
 
     warn <<"";
 Using access tokens:
-   access_token        => $sess{access_token}
-   access_token_secret => $sess{access_token_secret}
+   access_token        => $tokens{access_token}
+   access_token_secret => $tokens{access_token_secret}
 
-    my $nt = $self->twitter;
+    my $nt = $self->twitter_client;
 
     # pass the access tokens to Net::Twitter::Lite
-    $nt->access_token($sess{access_token});
-    $nt->access_token_secret($sess{access_token_secret});
+    $nt->access_token($tokens{access_token});
+    $nt->access_token_secret($tokens{access_token_secret});
 
     # attempt to get the user's last tweet
     my $status = eval { $nt->user_timeline({ count => 1 }) };
@@ -68,7 +88,7 @@ Using access tokens:
         warn "$@\n";
 
         # if we got a 401 response, our access tokens were invalid; get new ones
-        return $self->authorize($q) if $@ =~ /\b401\b/;
+        return $self->authorize($q, $nt) if $@ =~ /\b401\b/;
 
         # something bad happened; show the user the error
         $status = $@;
@@ -82,9 +102,18 @@ Using access tokens:
 
 # send the user to Twitter to authorize us
 sub authorize {
-    my ($self, $q) = @_;
+    my ($self, $q, $nt) = @_;
+    $nt ||= $self->twitter_client;
 
-    my $auth_url = $self->twitter->get_authorization_url(callback => "$ENV{SERVER_URL}oauth_callback");
+    my $callback = join '', $ENV{SERVER_URL}, 'oauth_callback';
+    my $auth_url = $nt->get_authorization_url(
+        callback => $callback,
+    );
+
+    set_secret(
+        $nt->request_token,
+        $nt->request_token_secret
+    );
 
     warn "Sending user to: $auth_url\n";
     print $q->redirect(-nph => 1, -uri => $auth_url);
@@ -93,31 +122,62 @@ sub authorize {
 # Twitter returns the user here
 sub oauth_callback {
     my ($self, $q) = @_;
-    
-    my $request_token = $q->param('oauth_token');
-    my $verifier      = $q->param('oauth_verifier');
+
+    # If the user authorized the app, we'll get oauth_token and oauth_verifier
+    # parameters. If they hit "cancel" to deny the request, then the "return to
+    # ..." button, we'll ge the request_token back in the "denied" parameter.
+    if ( my $token = $q->param('denied') ) {
+        warn "Sadly, we were denied for request_token $token.\n";
+        get_secret($token); # discard it, it's of no value, now
+        print $q->redirect(-nph => 1, -uri => "$ENV{SERVER_URL}");
+        return;
+    }
+
+    my $request_token  = $q->param('oauth_token');
+    my $verifier       = $q->param('oauth_verifier');
+    my $request_secret = get_secret($request_token);
+    unless ( $request_secret ) {
+        # Something is wrong:
+        # - the request_token has expired
+        # - our callback was hit with invalid parameters
+        # - this is a replay (we've already exchanged the request token
+        #   for an access token/secret
+        # Your app will need to deal with it. We'll punt the user to
+        # the home page.
+        print $q->redirect(-nph => 1, -uri => "$ENV{SERVER_URL}");
+        return;
+    }
 
     warn <<"";
 User returned from Twitter with:
     oauth_token    => $request_token
     oauth_verifier => $verifier
 
+    # We'll need the request token/secret for authorization
+    my $nt = $self->twitter_client;
+    $nt->request_token($request_token);
+    $nt->request_token_secret($request_secret);
+
     # exchange the request token for access tokens
-    my @access_tokens = $self->twitter->request_access_token(verifier => $verifier);
+    my ( $access_token, $access_token_secret ) =
+        $nt->request_access_token(verifier => $verifier);
 
     warn <<"";
 Exchanged request tokens for access tokens:
-    access_token        => $access_tokens[0]
-    access_token_secret => $access_tokens[1]
+    access_token        => $access_token
+    access_token_secret => $access_token_secret
 
-    # we'll store the access tokens in a session cookie
-    my $cookie = $q->cookie(-name => 'sess', -value => {
-        access_token        => $access_tokens[0],
-        access_token_secret => $access_tokens[1],
+    # *** Don't do this at home! ***
+    # For our simple example, we'll store the access token/secret in a cookie.
+    # In a production app, you don't want to do this. Store the token/secret
+    # in a database, encrypted!
+    my $cookie = $q->cookie(-name => 'dont-do-this', -value => {
+        access_token        => $access_token,
+        access_token_secret => $access_token_secret,
     });
 
     warn "redirecting newly authorized user to $ENV{SERVER_URL}\n";
-    print $q->redirect(-nph => 1, -uri => "$ENV{SERVER_URL}", -cookie => $cookie);
+    print $q->redirect(-cookie => $cookie, -nph => 1, -uri => "$ENV{SERVER_URL}");
 }
 
 # display a 404 Not found for any request we don't expect

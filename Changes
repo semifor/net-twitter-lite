@@ -1,3 +1,9 @@
+Revision history for Net::Twitter::Lite
+
+{{$NEXT}}
+    - modifed example/oauth_webapp.pl (issue 18)
+    - added upload_media; deprecated update_with_media
+
 0.12007 2016-11-18
     - depend on LWP::Protocol::https instead of Crypt::SSLeay
     - make SSL the default for Net::Twitter::Lite::WithAPIv1_1
