@@ -1,6 +1,8 @@
 Revision history for Net::Twitter::Lite
 
 {{$NEXT}}
+
+0.12008  2016-12-05 17:21:25 PST
     - modifed example/oauth_webapp.pl (issue 18)
     - added upload_media; deprecated update_with_media
 

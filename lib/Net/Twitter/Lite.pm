@@ -1,5 +1,5 @@
 package Net::Twitter::Lite;
-our $VERSION = '0.12007';
+our $VERSION = '0.12008';
 use 5.005;
 use warnings;
 use strict;
