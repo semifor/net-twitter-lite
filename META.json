@@ -1,0 +1,99 @@
+{
+   "abstract" : "A perl API library for the Twitter API",
+   "author" : [
+      "Marc Mims <marc@questright.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 6.008, CPAN::Meta::Converter version 2.150001",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Net-Twitter-Lite",
+   "no_index" : {
+      "directory" : [
+         "eg",
+         "examples",
+         "inc",
+         "share",
+         "src",
+         "t",
+         "xt"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.034"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Pod::Coverage::TrustPod" : "0",
+            "Test::Pod" : "1.41",
+            "Test::Pod::Coverage" : "1.08"
+         }
+      },
+      "runtime" : {
+         "recommends" : {
+            "Net::Netrc" : "0",
+            "Net::OAuth" : "0.25"
+         },
+         "requires" : {
+            "Carp" : "0",
+            "Encode" : "0",
+            "HTTP::Request::Common" : "0",
+            "JSON" : "2.02",
+            "LWP::Protocol::https" : "0",
+            "LWP::UserAgent" : "2.032",
+            "Net::HTTP" : ">= 0, != 6.04, != 6.05",
+            "Net::Netrc" : "0",
+            "URI" : "1.40",
+            "URI::Escape" : "0",
+            "overload" : "0",
+            "parent" : "0",
+            "perl" : "5.006",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Data::Dumper" : "0",
+            "File::Spec" : "0",
+            "IO::Handle" : "0",
+            "IPC::Open3" : "0",
+            "Test::Fatal" : "0",
+            "Test::More" : "0",
+            "Test::Simple" : "0.98",
+            "blib" : "1.01",
+            "perl" : "5.006"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/semifor/net-twitter-lite/issues"
+      },
+      "homepage" : "https://github.com/semifor/net-twitter-lite",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/semifor/net-twitter-lite.git",
+         "web" : "https://github.com/semifor/net-twitter-lite"
+      },
+      "x_IRC" : "irc://irc.perl.org#net-twitter"
+   },
+   "version" : "0.12007",
+   "x_contributors" : [
+      "Ansgar Burchardt <ansgar@43-1.org>",
+      "Chris <chris@starforge.co.uk>",
+      "Marc Mims <marc@moz.com>",
+      "zhouzhen1 <zhouzhen1@gmail.com>"
+   ],
+   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0213"
+}
+
